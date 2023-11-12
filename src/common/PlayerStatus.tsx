@@ -1,9 +1,11 @@
+import { PlayerID } from 'boardgame.io';
 import React from 'react';
 import PlayerInfoImage from '../assets/playerInfo.png';
 import ResourceIron from '../assets/resource_iron.png';
 import ResourceScrap from '../assets/resource_scrap.png';
 import ResourceStone from '../assets/resource_stone.png';
-import { Building } from './card';
+import { BuildingCard } from './building';
+import { Building, Character } from './card';
 import { PlayerInfo } from './interface';
 import { useResizeObserver } from './resizeObserver';
 
@@ -79,7 +81,11 @@ function getPosition(e: React.MouseEvent<HTMLImageElement, MouseEvent>) {
     };
 }
 
-export default function PlayerStatus({ status }: { status: PlayerInfo }) {
+export default function PlayerStatus({
+    status, playerID, pendingBuilding, moves,
+}: {
+    status: PlayerInfo, playerID: PlayerID, pendingBuilding?: BuildingCard, moves: any,
+}) {
     const ref = React.useRef<HTMLImageElement>();
     useResizeObserver();
 
@@ -92,11 +98,30 @@ export default function PlayerStatus({ status }: { status: PlayerInfo }) {
             // alert(id);
         }
     }
+    function onMouseOver(e: React.MouseEvent<HTMLImageElement, MouseEvent>) {
+        const pos = getPosition(e);
+        console.log(pos.x, pos.y);
+        for (const id in interactiveElements) {
+            const element = interactiveElements[id];
+            if (!inRange(pos.x, pos.y, element.bound)) continue;
+            // alert(id);
+            const [x, y] = [+id[2], +id[3]];
+            if (!status.buildings[x][y]) {
+
+            }
+        }
+    }
 
     return <div>
         <div style={{ position: 'relative' }}>
             <div style={{
-                position: 'absolute', left: 0, top: 0, width: 80, zIndex: 9999, lineHeight: '0px',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: 80,
+                zIndex: 9999,
+                lineHeight: '0px',
+                zoom: (ref.current?.clientWidth || 350) / 380,
             }}>
                 <p>Player {status.name}</p>
                 <div style={{ display: 'inline' }}>
@@ -114,21 +139,46 @@ export default function PlayerStatus({ status }: { status: PlayerInfo }) {
                 <br />
                 <div style={{ display: 'inline' }}>
                     <p>Cash: {status.resources.Cash}</p>
+                    <p>Score: {status.score}</p>
                 </div>
             </div>
-            <img onMouseDown={onMouseDown} ref={ref} src={PlayerInfoImage} style={{ maxWidth: '100%', maxHeight: '100%' }} />
+            <img
+                onMouseDown={onMouseDown}
+                onMouseOver={onMouseOver}
+                ref={ref}
+                src={PlayerInfoImage}
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+            />
             {ref.current && <div>
-                {status.buildings.flatMap((line, lineIndex) => line.map((b, col) => b && <div
+                {status.buildings.flatMap((line, lineIndex) => line.map((b, col) => <div
                     style={{
                         position: 'absolute',
                         left: (670 + col * 630) / 2600 * ref.current!.clientWidth,
                         top: (lineIndex * 900) / 3600 * ref.current!.clientHeight,
                     }}>
-                    <Building
-                        offset={b.imageOffset}
-                        height={ref.current!.clientHeight / 4}
-                    />
-                </div>))}
+                    {b
+                        ? <Building
+                            offset={b.imageOffset}
+                            height={ref.current!.clientHeight / 4}
+                        />
+                        : pendingBuilding
+                            ? <Building
+                                offset={pendingBuilding.imageOffset}
+                                height={ref.current!.clientHeight / 4}
+                                placeholder
+                                onClick={() => moves.PlaceBuilding(lineIndex, col)}
+                            /> : null}
+                </div>,
+                ))}
+                {status.activeCharacter && <div style={{
+                    position: 'absolute',
+                    left: 10 / 2600 * ref.current.clientWidth,
+                    top: 1990 / 3600 * ref.current.clientHeight,
+                }}>
+                    {status.id === playerID
+                        ? <Character height={ref.current!.clientHeight / 4.2} offset={status.activeCharacter.imageOffset} />
+                        : <Character height={ref.current!.clientHeight / 4.2} />}
+                </div>}
             </div>}
         </div>
     </div >;

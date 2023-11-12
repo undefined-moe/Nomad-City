@@ -1,10 +1,33 @@
+import { ResourceType } from './interface';
+
+type BuildingEffects = [number, BuildingEffectType | ResourceType][];
+export enum BuildingEffectType {
+    Replace = 'Replace',
+    Deploy = 'Deploy',
+    Move = 'Move',
+    Remove = 'Remove',
+    Explore = 'Explore',
+    Build = 'Build',
+    CityMove = 'CityMove',
+    BuildExpanding = 'BuildExpanding',
+    Harvest = 'Claim',
+    Trigger = 'Trigger',
+    Sell = 'Sell',
+    Claim = 'Claim',
+    SetEnd = 'SetEnd',
+}
 export interface BuildingCard {
     name: string;
     choices: {
         name: string;
         effect: [number, string][];
     }[];
+    cost: [number, ResourceType][][],
     imageOffset: [number, number];
+    score: number;
+    onBuild: BuildingEffects[];
+    unique?: true;
+    color: 'any' | 'red' | 'black' | 'yellow' | 'blue';
 }
 
 export enum Buildings {
@@ -64,123 +87,315 @@ export const buildings: Record<Buildings, BuildingCard> = {
         name: '佣兵指挥部',
         choices: [],
         imageOffset: [0, 0],
+        score: 1,
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [2, ResourceType.Iron],
+                [2, ResourceType.Cash],
+            ],
+            [[18, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[1, BuildingEffectType.Deploy]],
+            [[1, BuildingEffectType.Replace]],
+        ],
     },
     载具仓库: {
         name: '载具仓库',
         choices: [],
         imageOffset: [0, 1200],
+        score: 0,
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [2, ResourceType.Scrap],
+            ],
+            [[9, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [
+                [1, BuildingEffectType.Remove],
+                [1, BuildingEffectType.Move],
+            ],
+            [[1, BuildingEffectType.Explore]],
+        ],
     },
     工业高炉: {
         name: '工业高炉',
         choices: [],
         imageOffset: [0, 2400],
+        score: 0,
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[15, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[4, ResourceType.Iron]],
+        ],
     },
     机动载具实验室: {
         name: '机动载具实验室',
         choices: [],
         imageOffset: [0, 3600],
+        score: 1,
+        cost: [
+            [
+                [2, ResourceType.Scrap],
+                [2, ResourceType.Iron],
+                [2, ResourceType.Cash],
+            ],
+            [[18, ResourceType.Cash]],
+        ],
+        onBuild: [],
     },
     护航调度中心: {
         name: '护航调度中心',
         choices: [],
         imageOffset: [0, 4800],
+        score: 0,
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [2, ResourceType.Iron],
+                [2, ResourceType.Scrap],
+            ],
+            [[18, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [
+                [1, BuildingEffectType.Deploy],
+                [1, BuildingEffectType.Deploy],
+            ],
+        ],
     },
     拓荒工程部: {
         name: '拓荒工程部',
         choices: [],
         imageOffset: [850, 0],
+        score: 0,
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [1, ResourceType.Scrap],
+            ],
+            [[9, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [
+                [1, BuildingEffectType.Deploy],
+                [1, BuildingEffectType.Remove],
+            ],
+            [[1, BuildingEffectType.Build]],
+        ],
     },
     简陋工程营: {
         name: '简陋工程营',
         choices: [],
         imageOffset: [850, 1200],
+        score: -1,
+        unique: true,
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [1, ResourceType.Scrap],
+            ],
+            [[8, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[1, BuildingEffectType.Build]],
+        ],
     },
     开采电铲: {
         name: '开采电铲',
         choices: [],
         imageOffset: [850, 2400],
+        score: 0,
+        cost: [
+            [
+                [1, ResourceType.Iron],
+                [2, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[3, ResourceType.Stone]],
+            [[3, ResourceType.Iron]],
+            [[3, ResourceType.Scrap]],
+            [[2, ResourceType.Stone], [1, ResourceType.Iron]],
+            [[2, ResourceType.Stone], [1, ResourceType.Scrap]],
+            [[2, ResourceType.Iron], [1, ResourceType.Scrap]],
+            [[2, ResourceType.Iron], [1, ResourceType.Stone]],
+            [[2, ResourceType.Scrap], [1, ResourceType.Stone]],
+            [[2, ResourceType.Scrap], [1, ResourceType.Iron]],
+            [[1, ResourceType.Stone], [1, ResourceType.Iron], [1, ResourceType.Scrap]],
+        ],
     },
     城邦工业区: {
         name: '城邦工业区',
         choices: [],
         imageOffset: [850, 3600],
+        score: 2,
+        cost: [
+            [
+                [4, ResourceType.Stone],
+                [3, ResourceType.Scrap],
+                [2, ResourceType.Cash],
+            ],
+            [[24, ResourceType.Cash]],
+        ],
+        onBuild: [],
     },
     源石精炼厂: {
         name: '源石精炼厂',
         choices: [],
         imageOffset: [850, 4800],
+        score: 0,
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[4, ResourceType.Scrap]],
+        ],
     },
     高性能动力设施: {
         name: '高性能动力设施',
         choices: [],
         imageOffset: [1700, 0],
+        score: 0,
+        onBuild: [
+            [[1, BuildingEffectType.CityMove]],
+        ],
     },
     固源岩提纯厂: {
         name: '固源岩提纯厂',
         choices: [],
         imageOffset: [1700, 1200],
+        score: 0,
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[7, ResourceType.Stone]],
+        ],
     },
     物流中枢: {
         name: '物流中枢',
         choices: [],
         imageOffset: [1700, 2400],
+        score: 2,
+        unique: true,
+        onBuild: [
+            [[1, BuildingEffectType.BuildExpanding]],
+        ],
     },
     矿料筛斗: {
         name: '矿料筛斗',
         choices: [],
         imageOffset: [1700, 3600],
+        score: 0,
+        onBuild: [
+            [[5, ResourceType.Scrap]],
+        ],
     },
     改良动力燃烧室: {
         name: '改良动力燃烧室',
         choices: [],
         imageOffset: [2550, 600],
+        score: 1,
+        onBuild: [],
     },
     运输舷梯: {
         name: '运输舷梯',
         choices: [],
         imageOffset: [2550, 1800],
+        score: 0,
+        onBuild: [
+            [[1, BuildingEffectType.Harvest]],
+        ],
     },
     城市化区域: {
         name: '城市化区域',
         choices: [],
         imageOffset: [2550, 3000],
+        score: 1,
+        onBuild: [
+            [[1, BuildingEffectType.Claim]],
+        ],
     },
     延伸枢纽: {
         name: '延伸枢纽',
         choices: [],
         imageOffset: [2550, 4200],
+        score: -1,
+        onBuild: [],
     },
     贸易街区: {
         name: '贸易街区',
         choices: [],
         imageOffset: [3400, 1200],
+        score: 0,
+        onBuild: [
+            [[1, BuildingEffectType.Sell]],
+        ],
     },
     异铁冶炼厂: {
         name: '异铁冶炼厂',
         choices: [],
         imageOffset: [3400, 2400],
+        score: 1,
+        onBuild: [
+            [[4, ResourceType.Iron]],
+        ],
     },
     城邦行政区: {
         name: '城邦行政区',
         choices: [],
         imageOffset: [3400, 3600],
+        score: 3,
+        unique: true,
     },
     核心指挥塔: {
         name: '核心指挥塔',
         choices: [],
         imageOffset: [4250, 0],
+        score: 0,
+        unique: true,
     },
     附属能源设施: {
         name: '附属能源设施',
         choices: [],
         imageOffset: [4250, 2400],
+        score: 1,
+        unique: true,
+        onBuild: [
+            [[1, BuildingEffectType.Trigger]],
+        ],
     },
     联邦理事处: {
         name: '联邦理事处',
         choices: [],
         imageOffset: [4250, 3600],
+        score: 1,
+        onBuild: [
+            [[1, BuildingEffectType.SetEnd]],
+        ],
     },
 };
 
-export const buildingDeck: Buildings[] = Object.entries(count)
+export const buildingDeck: BuildingCard[] = Object.entries(count)
     .flatMap(([k, v]) => Array(v).fill(buildings[k as Buildings]));

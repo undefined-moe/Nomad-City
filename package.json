@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hydrooj/utils": "^1.4.15",
+    "allotment": "^1.19.3",
     "boardgame.io": "^0.50.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

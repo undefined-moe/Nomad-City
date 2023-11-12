@@ -1,6 +1,8 @@
 import { BuildingCard } from './building';
 import { CharacterCard } from './characters';
 
+export type PlayerID = string;
+
 export enum EventType {
     Green = 'Green',
     Orange = 'Orange',
@@ -15,6 +17,8 @@ export enum ResourceType {
     /** 异铁 */
     Iron = 'Iron',
     Cash = 'Cash',
+    /** 源石 */
+    Crystal = 'Crystal',
 }
 
 export interface CardChoice {
@@ -29,26 +33,29 @@ export interface Card {
     choices: CardChoice[];
 }
 
-type BuildingLine = [BuildingCard | null, BuildingCard | null, BuildingCard | null];
+type BuildingLine = [BuildingCard?, BuildingCard?, BuildingCard?];
 
 export interface PlayerInfo {
     name: string;
-    id: string;
+    id: PlayerID;
+    score: number;
     resources: Record<ResourceType, number>;
     cards: CharacterCard[];
+    stageQueue: string[];
+    currentStage?: string;
     usedCards: CharacterCard[];
     buildings: [BuildingLine, BuildingLine, BuildingLine, BuildingLine];
     activeCharacter?: CharacterCard;
 }
 
 export interface RoomInfo {
-    main?: string;
+    main?: PlayerID;
     relatedCard?: Card;
-    workers: [string?, string?];
+    workers: [PlayerID?, PlayerID?];
 }
 
 export interface NodeInfo {
-    workers: [string?, string?];
+    workers: [PlayerID?, PlayerID?];
 }
 
 interface MapShape {
@@ -59,9 +66,10 @@ interface MapShape {
 export interface GameState<Map extends MapShape> {
     def: Map;
     turn: number;
-    cards: Record<EventType, Card[]> & { building: BuildingCard };
+    cards: Record<EventType, Card[]> & { building: BuildingCard[] };
     pendingCard?: Card;
-    shownBuildings: BuildingCard[];
+    pendingBuilding?: BuildingCard;
+    shownBuildings: (BuildingCard | undefined)[];
     map: {
         rooms: Record<Map['rooms'][number], RoomInfo>
         nodes: Record<Map['nodes'][number], NodeInfo>
