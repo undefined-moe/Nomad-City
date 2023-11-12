@@ -167,6 +167,7 @@ export function Board(props: GameProps) {
                         moves={props.moves}
                         status={player}
                         key={player.id}
+                        stage={stage}
                         {...(props.playerID === player.id && selectBuildingPosition ? { pendingBuilding: props.G.pendingBuilding } : {})}
                     />)}
                 </div>

@@ -10,9 +10,9 @@ import { PlayerInfo } from './interface';
 import { useResizeObserver } from './resizeObserver';
 
 export default function PlayerStatus({
-    status, playerID, pendingBuilding, moves,
+    status, playerID, pendingBuilding, moves, stage,
 }: {
-    status: PlayerInfo, playerID: PlayerID, pendingBuilding?: BuildingCard, moves: any,
+    status: PlayerInfo, stage?: string, playerID: PlayerID, pendingBuilding?: BuildingCard, moves: any,
 }) {
     const ref = React.useRef<HTMLImageElement>();
     useResizeObserver();
@@ -64,6 +64,8 @@ export default function PlayerStatus({
                         ? <Building
                             offset={b.imageOffset}
                             height={ref.current!.clientHeight / 4}
+                            rotate={b.rotate}
+                            onClick={() => stage === 'selectBuilding' && moves.SelectBuilding(lineIndex, col)}
                         />
                         : pendingBuilding
                             ? <Building

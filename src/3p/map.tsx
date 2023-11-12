@@ -105,8 +105,8 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
             }
             console.log(props.ctx.phase, selfCitySelected, element.type);
             if (!stage) continue;
-            if (selfCitySelected && element.type === 'room') {
-                if (stage === 'mainAction') props.moves.gotoCityMove();
+            if (element.type === 'room') {
+                if (selfCitySelected && stage === 'mainAction') props.moves.gotoCityMove();
                 return props.moves.CityMove(id);
             }
         }
@@ -189,6 +189,10 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
                     if (stage === 'Move' && workerSelection.length) {
                         setWorkerSelection([]);
                         return props.moves.Move(workerSelection[0], id);
+                    }
+                    if (stage === 'mainAction' && !workerSelection.length && !selfCitySelected) {
+                        props.moves.gotoDeploy();
+                        return props.moves.Deploy(id);
                     }
                 }
             },

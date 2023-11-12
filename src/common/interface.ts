@@ -33,12 +33,18 @@ export enum EffectType {
     BuildExpanding = 'BuildExpanding',
     Harvest = 'Harvest',
     Trigger = 'Trigger',
-    Sell = 'Sell',
+    Sell = 'Sell', // +
     Claim = 'Claim',
-    SetEnd = 'SetEnd',
+    SetEnd = 'SetEnd', // +
     Score = 'Score',
     OthersAddStone = 'OthersAddStone',
     OthersAddIron = 'OthersAddIron',
+    PendingRemove = 'PendingRemove', // +
+    ChangeBuildingList = 'ChangeBuildingList', // 角色::德克萨斯 +
+    CollectCharacter = 'CollectCharacter', // 角色::锡人 +
+    RemoveAndScore = 'RemoveAndScore', // 角色::山 +
+    SelectBuildingColor = 'SelectBuildingColor', // 角色::玛恩纳 +
+    ReturnBuilding = 'ReturnBuilding', // 角色::玛恩纳 +
 }
 
 export interface CardChoice {
@@ -64,6 +70,8 @@ export interface PlayerInfo {
     usedCards: CharacterCard[];
     buildings: [BuildingLine, BuildingLine, BuildingLine, BuildingLine];
     activeCharacter?: CharacterCard;
+    harvest?: boolean;
+    endStageQueue: string[];
 }
 
 export interface RoomInfo {
@@ -82,6 +90,9 @@ interface MapShape {
 }
 
 export interface GameState<Map extends MapShape> {
+    allowGodMode: boolean;
+    turnBegin: number;
+    count?: number;
     def: Map;
     turn: number;
     stageQueue: string[];
@@ -89,6 +100,7 @@ export interface GameState<Map extends MapShape> {
     advancedCityMove?: boolean;
     cards: Record<EventType, Card[]> & { building: BuildingCard[] };
     pendingCard?: Card;
+    effectUsed?: number;
     pendingBuilding?: BuildingCard;
     shownBuildings: (BuildingCard | undefined)[];
     map: {

@@ -12,6 +12,7 @@ export interface BuildingCard {
     onBuild: Effects[];
     unique?: true;
     color: 'any' | 'red' | 'black' | 'yellow' | 'blue';
+    rotate?: true;
 }
 
 export enum Buildings {

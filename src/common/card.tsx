@@ -57,6 +57,7 @@ export function Character(props: { offset?: number, height: number, onClick?: an
 export function Building(props: {
     offset: [number, number],
     onClick?: any,
+    rotate?: true,
     height: number,
     style?: React.CSSProperties,
     placeholder?: boolean,
@@ -74,6 +75,7 @@ export function Building(props: {
                 zoom,
                 display: 'inline-block',
                 ...(props.placeholder ? { opacity: 0.5 } : hover ? hoverStyle : {}),
+                ...(props.rotate ? { transform: 'rotate(180deg)' } : {}),
             }}
             onClick={props.onClick || (() => { })}
             onMouseOver={() => setHover(true)}
