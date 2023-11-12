@@ -38,6 +38,7 @@ export enum EffectType {
     SetEnd = 'SetEnd',
     Score = 'Score',
     OthersAddStone = 'OthersAddStone',
+    OthersAddIron = 'OthersAddIron',
 }
 
 export interface CardChoice {
