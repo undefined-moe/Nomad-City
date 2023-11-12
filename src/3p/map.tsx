@@ -5,7 +5,7 @@ import { GameState, RoomInfo } from '../common/interface';
 import { useResizeObserver } from '../common/resizeObserver';
 import { ResourceImage } from '../common/resourceImages';
 import { Bound, interactiveElements } from './elements';
-import type { GameInfo3, RoomNames3 } from './game';
+import { GameInfo3, RoomNames3 } from './game';
 
 const selectedStyle: React.CSSProperties = {
     borderImageSource: 'radial-gradient(60% 60%, transparent 0px, transparent 100%, cyan 100%)',
@@ -64,13 +64,25 @@ const colorOfPlayer: Record<string, string> = {
     3: 'green',
 };
 
+function isValidRoom(id: string): id is RoomNames3 {
+    return GameInfo3.rooms.includes(id as RoomNames3);
+}
+function getWorkerNode(G: GameState<GameInfo3>, target: string) {
+    const info = target.split('-');
+    const idx = +(info.pop() || 0);
+    const id = info.join('-');
+    const item = isValidRoom(id) ? G.map.rooms[id] : G.map.nodes[id];
+    return [item, idx, id] as const;
+}
+
 export function Map(props: BoardProps<GameState<GameInfo3>>) {
     const ref = React.useRef<HTMLImageElement>(null);
     useResizeObserver();
-    const currentPlayerStatus = props.G.players[props.playerID!];
+    const stage = props.G.currentStage;
     const [selfCitySelected, setSelfCitySelected] = React.useState(false);
     const [workerSelection, setWorkerSelection] = React.useState<string[]>([]);
 
+    // eslint-disable-next-line consistent-return
     function onClick(e: React.MouseEvent<HTMLImageElement, MouseEvent>) {
         const pos = getPosition(e);
         console.log(pos.x, pos.y);
@@ -81,17 +93,22 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
                 return props.moves.SelectArea(id);
             }
             console.log(props.ctx.phase, selfCitySelected, element.type);
-            if (props.ctx.phase === 'action' && selfCitySelected && element.type === 'room') {
+            if (!stage) continue;
+            if (selfCitySelected && element.type === 'room') {
+                if (stage === 'mainAction') props.moves.gotoCityMove();
                 return props.moves.CityMove(id);
             }
-            if (props.ctx.phase === 'action' && element.type === 'work' && currentPlayerStatus.currentStage === 'mainAction') {
-                const [room, work] = id.split('-') as [RoomNames3, string];
-
-                const current = props.G.map.rooms[room].workers[+work];
+            if (element.type === 'work' && ['mainAction', 'Deploy'].includes(stage)) {
+                const [item, idx] = getWorkerNode(props.G, id);
+                const current = item.workers[+idx];
                 if (!current) {
-                    if (!workerSelection.length) return props.moves.Deploy(room);
+                    if (!workerSelection.length) {
+                        if (stage === 'mainAction') props.moves.gotoDeploy();
+                        return props.moves.Deploy(id);
+                    }
                     setWorkerSelection([]);
-                    return props.moves.Move(workerSelection[0], room);
+                    if (stage === 'mainAction') props.moves.gotoMove();
+                    return props.moves.Move(workerSelection[0], id);
                 }
             }
         }

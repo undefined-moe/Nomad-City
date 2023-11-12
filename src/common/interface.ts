@@ -21,9 +21,28 @@ export enum ResourceType {
     Crystal = 'Crystal',
 }
 
+export type Effects = [number, EffectType | ResourceType][];
+export enum EffectType {
+    Replace = 'Replace',
+    Deploy = 'Deploy',
+    Move = 'Move',
+    Remove = 'Remove',
+    Explore = 'Explore',
+    Build = 'Build',
+    CityMove = 'CityMove',
+    BuildExpanding = 'BuildExpanding',
+    Harvest = 'Harvest',
+    Trigger = 'Trigger',
+    Sell = 'Sell',
+    Claim = 'Claim',
+    SetEnd = 'SetEnd',
+    Score = 'Score',
+    OthersAddStone = 'OthersAddStone',
+}
+
 export interface CardChoice {
     name: string;
-    effect: [number, ResourceType][];
+    effect: Effects;
 }
 
 export interface Card {
@@ -41,8 +60,6 @@ export interface PlayerInfo {
     score: number;
     resources: Record<ResourceType, number>;
     cards: CharacterCard[];
-    stageQueue: string[];
-    currentStage?: string;
     usedCards: CharacterCard[];
     buildings: [BuildingLine, BuildingLine, BuildingLine, BuildingLine];
     activeCharacter?: CharacterCard;
@@ -66,6 +83,9 @@ interface MapShape {
 export interface GameState<Map extends MapShape> {
     def: Map;
     turn: number;
+    stageQueue: string[];
+    currentStage?: string;
+    advancedCityMove?: boolean;
     cards: Record<EventType, Card[]> & { building: BuildingCard[] };
     pendingCard?: Card;
     pendingBuilding?: BuildingCard;

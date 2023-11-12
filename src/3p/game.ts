@@ -1,11 +1,13 @@
 /* eslint-disable consistent-return */
 import type { Game, Move } from 'boardgame.io';
 import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
-import { buildingDeck, buildings } from '../common/building';
+import {
+    buildingDeck, buildings,
+} from '../common/building';
 import { characters } from '../common/characters';
 import { EventCards } from '../common/eventCards';
 import {
-    EventType, GameState, PlayerInfo, ResourceType,
+    EffectType, EventType, GameState, PlayerInfo, ResourceType,
 } from '../common/interface';
 
 export const GameInfo3 = {
@@ -124,6 +126,16 @@ const moves = {
 function isValidRoom(id: string): id is RoomNames3 {
     return GameInfo3.rooms.includes(id as RoomNames3);
 }
+function isResource(type: string): type is ResourceType {
+    return Object.values(ResourceType).includes(type as ResourceType);
+}
+function getWorkerNode(G: GameState<GameInfo3>, target: string) {
+    const info = target.split('-');
+    const idx = +(info.pop() || 0);
+    const id = info.join('-');
+    const item = isValidRoom(id) ? G.map.rooms[id] : G.map.nodes[id];
+    return [item, idx, id] as const;
+}
 
 const TheFounders3: Game<GameState<GameInfo3>> = {
     name: 'Founders',
@@ -143,7 +155,6 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                     Scrap: 0,
                     Crystal: 0,
                 },
-                stageQueue: [],
                 cards: [
                     clone(characters['坎诺特']),
                     clone(characters['锡人']),
@@ -184,6 +195,7 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                 [EventType.Red]: random.Shuffle(clone(EventCards[EventType.Red])),
                 building,
             },
+            stageQueue: [],
             shownBuildings,
             players,
             texts: [],
@@ -261,7 +273,7 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 if (!G.players[playerID].cards[index]) return INVALID_MOVE;
                                 const card = G.players[playerID].cards.splice(index, 1)[0];
                                 G.players[playerID].activeCharacter = card;
-                                G.players[playerID].stageQueue = ['mainAction'];
+                                G.stageQueue = ['mainAction'];
                                 if (Object.values(G.players).every((p) => p.activeCharacter)) {
                                     events.endPhase();
                                 }
@@ -274,27 +286,25 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
         action: {
             next: 'harvest',
             moves: {
-                SetQuickAction({ G, events, playerID }, a: boolean) {
-                    if (a) G.players[playerID].stageQueue.unshift('quickAction');
-                    events.setStage(G.players[playerID].stageQueue.shift() || 'quickAction');
+                SetQuickAction({ G, events }, a: boolean) {
+                    if (a) G.stageQueue.unshift('quickAction');
+                    events.setStage(G.stageQueue.shift() || 'quickAction');
                 },
             },
             turn: {
                 order: TurnOrder.CUSTOM(['0', '1', '2', '0', '1', '2']),
-                onMove: ({ G, events, playerID }) => {
-                    if (G.players[playerID].currentStage === 'quickAction') return;
-                    const next = G.players[playerID].stageQueue.shift();
+                onMove: ({ G, events }) => {
+                    if (G.currentStage === 'quickAction') return;
+                    const next = G.stageQueue.shift();
                     if (!next) return events.endTurn();
                     console.log(`to ${next}`);
-                    G.players[playerID].currentStage = next;
+                    G.currentStage = next;
                     events.setStage(next);
                 },
                 onBegin: ({ G }) => {
                     console.log('turn.onbegin');
-                    for (const p in G.players) {
-                        G.players[p].stageQueue = ['mainAction', 'quickAction'];
-                        G.players[p].currentStage = 'quickAction';
-                    }
+                    G.stageQueue = ['mainAction', 'quickAction'];
+                    G.currentStage = 'quickAction';
                 },
                 activePlayers: {
                     currentPlayer: {
@@ -304,21 +314,19 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                 stages: {
                     mainAction: {
                         moves: {
-                            Deploy({ G, playerID }, target: string) {
-                                const node = isValidRoom(target) ? G.map.rooms[target] : G.map.nodes[target as keyof typeof G.map.nodes];
-                                if (node.workers[0] && node.workers[1]) return INVALID_MOVE;
-                                if (isValidRoom(target)) {
-                                    if (!G.map.rooms[target].relatedCard?.type) return INVALID_MOVE;
-                                    if (G.map.rooms[target].main && G.map.rooms[target].main !== playerID) return INVALID_MOVE;
-                                }
-                                node.workers[node.workers[0] ? 1 : 0] = playerID;
+                            gotoDeploy({ G }) {
+                                G.stageQueue.unshift('Deploy');
                             },
-                            Move({ G, playerID }, source: string, target: string) {
-                                const result = executeMoveOperation(G, playerID, source, target);
-                                if (result === INVALID_MOVE) return result;
-                                G.players[playerID].stageQueue.unshift('secondMove');
+                            gotoMove({ G }) {
+                                G.stageQueue.unshift('Move', 'Move');
                             },
-                            Explore({ G, playerID, events }, target: string) {
+                            gotoCityMove({ G }) {
+                                G.stageQueue.unshift('CityMove');
+                            },
+                            gotoBuild({ G }) {
+                                G.stageQueue.unshift('Build');
+                            },
+                            Explore({ G, events }, target: string) {
                                 if (!isValidRoom(target)) return INVALID_MOVE;
                                 const room = G.map.rooms[target];
                                 if (room.main || room.relatedCard) return INVALID_MOVE;
@@ -328,10 +336,73 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 room.relatedCard = card;
                                 G.pendingCard = card;
                             },
+                            Special() { },
+                        },
+                    },
+                    quickAction: {
+                        moves: {
+                            CharacterCard() { },
+                            CityStyle() { },
+                            Abort({ G }) {
+                                G.currentStage = '';
+                            },
+                        },
+                    },
+                    Deploy: {
+                        moves: {
+                            Deploy({ G, playerID }, target: string) {
+                                const [item, idx, id] = getWorkerNode(G, target);
+                                if (isValidRoom(id)) {
+                                    if (!G.map.rooms[id].relatedCard?.type) return INVALID_MOVE;
+                                    if (G.map.rooms[id].main && G.map.rooms[id].main !== playerID) return INVALID_MOVE;
+                                }
+                                if (item.workers[idx]) return INVALID_MOVE;
+                                item.workers[idx] = playerID;
+                            },
+                            Cancel() { },
+                        },
+                    },
+                    Move: {
+                        moves: {
+                            Move({ G, playerID }, source: string, target: string) {
+                                return executeMoveOperation(G, playerID, source, target);
+                            },
+                            Cancel() { },
+                        },
+                    },
+                    Remove: {
+                        moves: {
+                            Remove({ G, playerID }, target: string) {
+                                const [item, idx] = getWorkerNode(G, target);
+                                if (!item) return INVALID_MOVE;
+                                if (!item.workers[idx] || item.workers[idx] === playerID) return INVALID_MOVE;
+                                item.workers[idx] = undefined;
+                            },
+                            Cancel() { },
+                        },
+                    },
+                    Replace: {
+                        moves: {
+                            Replace({ G, playerID }, target: string) {
+                                const [item, idx] = getWorkerNode(G, target);
+                                if (!item) return INVALID_MOVE;
+                                if (!item.workers[idx]) return INVALID_MOVE;
+                                item.workers[idx] = playerID;
+                            },
+                            Cancel() { },
+                        },
+                    },
+                    CityMove: {
+                        moves: {
                             CityMove({ G, playerID }, target: string) {
                                 if (!isValidRoom(target)) return INVALID_MOVE;
                                 const room = G.map.rooms[target];
-                                if (G.players[playerID].resources[ResourceType.Crystal] < 3) return INVALID_MOVE;
+                                const resources = G.players[playerID].resources;
+                                const cheapMove = G.players[playerID].buildings.flat().some((i) => i?.name === '改良动力燃烧室');
+                                if (!G.advancedCityMove) {
+                                    if (cheapMove && resources[ResourceType.Scrap] < 2) return INVALID_MOVE;
+                                    if (!cheapMove && resources[ResourceType.Crystal] < 3) return INVALID_MOVE;
+                                }
                                 if (room.main) return INVALID_MOVE;
                                 const currentPos = Object.entries(G.map.rooms).find(([, v]) => v.main === playerID)![0] as RoomNames3;
                                 let route: NodeNames3 | null = null;
@@ -345,15 +416,21 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 c.workers[c.workers[0] ? 1 : 0] = playerID;
                                 G.map.rooms[target].main = playerID;
                                 G.map.rooms[target].workers = [undefined, undefined];
-                                G.map.nodes[route].workers = [undefined, undefined];
-                                G.players[playerID].resources[ResourceType.Crystal] -= 3;
+                                G.map.nodes[route].workers = [G.advancedCityMove ? playerID : undefined, undefined];
+                                if (G.advancedCityMove) G.advancedCityMove = false;
+                                else if (cheapMove) resources[ResourceType.Scrap] -= 2;
+                                else resources[ResourceType.Crystal] -= 3;
                                 if (!G.map.rooms[target].relatedCard) {
                                     const card = G.cards[G.def.eventType[target]].pop();
                                     room.relatedCard = card;
                                     G.pendingCard = card;
-                                    G.players[playerID].stageQueue.unshift('cardChoice');
+                                    G.stageQueue.unshift('cardChoice');
                                 }
                             },
+                        },
+                    },
+                    Build: {
+                        moves: {
                             Build({ G, playerID }, target: number, payment: number) {
                                 const card = G.shownBuildings[target];
                                 if (!card) return INVALID_MOVE;
@@ -368,24 +445,7 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 }
                                 G.pendingBuilding = card;
                                 G.shownBuildings[target] = G.cards.building.pop();
-                                G.players[playerID].stageQueue.unshift('placeBuilding');
-                            },
-                            Special() { },
-                        },
-                    },
-                    quickAction: {
-                        moves: {
-                            CharacterCard() { },
-                            CityStyle() { },
-                            Abort({ G, playerID }) {
-                                G.players[playerID].currentStage = '';
-                            },
-                        },
-                    },
-                    secondMove: {
-                        moves: {
-                            Move({ G, playerID }, source: string, target: string) {
-                                return executeMoveOperation(G, playerID, source, target);
+                                G.stageQueue.unshift('placeBuilding');
                             },
                         },
                     },
@@ -399,9 +459,60 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                             PlaceBuilding({ G, playerID }, x: number, y: number) {
                                 if (x < 0 || x > 3 || y < 0 || y > 2) return INVALID_MOVE;
                                 if (G.players[playerID].buildings[x][y]) return INVALID_MOVE;
-                                G.players[playerID].buildings[x][y] = G.pendingBuilding;
-                                delete G.pendingBuilding;
+                                const card = G.pendingBuilding!;
+                                G.players[playerID].buildings[x][y] = card;
                                 // TOOD process building onBuild Effect
+                                if (!card.onBuild.length) return delete G.pendingBuilding;
+                                G.stageQueue.unshift('selectBuildingEffect');
+                            },
+                        },
+                    },
+                    selectBuildingEffect: {
+                        moves: {
+                            SelectBuildingEffect({ G, playerID }, index: number) {
+                                const card = G.pendingBuilding!;
+                                const buildingMap = G.players[playerID].buildings;
+                                const effect = card.onBuild[index];
+                                if (!effect) return INVALID_MOVE;
+                                delete G.pendingBuilding;
+                                for (const [amount, type] of effect) {
+                                    if (isResource(type)) {
+                                        G.players[playerID].resources[type] += amount;
+                                        continue;
+                                    } else if ([
+                                        EffectType.Move, EffectType.Replace,
+                                        EffectType.Remove, EffectType.Explore,
+                                        EffectType.Build, EffectType.Deploy,
+                                    ].includes(type)) {
+                                        G.stageQueue.unshift(type);
+                                    } else if (type === EffectType.CityMove) {
+                                        G.advancedCityMove = true;
+                                        G.stageQueue.unshift(type);
+                                    } else if (type === EffectType.BuildExpanding) {
+                                        G.pendingBuilding = buildings['延伸枢纽'];
+                                        G.stageQueue.unshift('placeBuilding');
+                                    } else if (type === EffectType.Claim) {
+                                        let tot = 0;
+                                        if (buildingMap[1][1]) tot += 4;
+                                        if (buildingMap[2][0]) tot += 4;
+                                        if (buildingMap[2][2]) tot += 4;
+                                        if (buildingMap[3][1]) tot += 4;
+                                        G.players[playerID].resources[ResourceType.Cash] += tot;
+                                    } else if (type === EffectType.Harvest) {
+                                        const room = Object.entries(G.map.rooms).find(([, v]) => v.main === playerID)![0] as RoomNames3;
+                                        let list = [room];
+                                        for (const key of G.def.rooms) {
+                                            if (G.def.nodes.some((i) => i.includes(key) && i.includes(room))) list.push(key as RoomNames3);
+                                        }
+                                        list = list.filter((i) => G.map.rooms[i].relatedCard?.type);
+                                        if (list.length > 4) list.length = 4;
+                                        for (const r of list) {
+                                            G.players[playerID].resources[G.map.rooms[r].relatedCard!.type!] += 1;
+                                        }
+                                    } else {
+                                        console.log('unknown effect type:', type);
+                                    }
+                                }
                             },
                         },
                     },

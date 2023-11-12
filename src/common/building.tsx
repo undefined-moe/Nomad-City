@@ -1,21 +1,5 @@
-import { ResourceType } from './interface';
+import { Effects, EffectType, ResourceType } from './interface';
 
-type BuildingEffects = [number, BuildingEffectType | ResourceType][];
-export enum BuildingEffectType {
-    Replace = 'Replace',
-    Deploy = 'Deploy',
-    Move = 'Move',
-    Remove = 'Remove',
-    Explore = 'Explore',
-    Build = 'Build',
-    CityMove = 'CityMove',
-    BuildExpanding = 'BuildExpanding',
-    Harvest = 'Claim',
-    Trigger = 'Trigger',
-    Sell = 'Sell',
-    Claim = 'Claim',
-    SetEnd = 'SetEnd',
-}
 export interface BuildingCard {
     name: string;
     choices: {
@@ -25,7 +9,7 @@ export interface BuildingCard {
     cost: [number, ResourceType][][],
     imageOffset: [number, number];
     score: number;
-    onBuild: BuildingEffects[];
+    onBuild: Effects[];
     unique?: true;
     color: 'any' | 'red' | 'black' | 'yellow' | 'blue';
 }
@@ -41,8 +25,10 @@ export enum Buildings {
     '开采电铲' = '开采电铲',
     '城邦工业区' = '城邦工业区',
     '源石精炼厂' = '源石精炼厂',
+    '源石精炼厂2' = '源石精炼厂2',
     '高性能动力设施' = '高性能动力设施',
     '固源岩提纯厂' = '固源岩提纯厂',
+    '固源岩提纯厂2' = '固源岩提纯厂2',
     '物流中枢' = '物流中枢',
     '矿料筛斗' = '矿料筛斗',
     '改良动力燃烧室' = '改良动力燃烧室',
@@ -67,9 +53,11 @@ const count: Partial<Record<Buildings, number>> = {
     简陋工程营: 2,
     开采电铲: 2,
     城邦工业区: 2,
-    源石精炼厂: 4,
+    源石精炼厂: 2,
+    源石精炼厂2: 2,
     高性能动力设施: 2,
-    固源岩提纯厂: 4,
+    固源岩提纯厂: 2,
+    固源岩提纯厂2: 2,
     物流中枢: 2,
     矿料筛斗: 2,
     改良动力燃烧室: 2,
@@ -88,6 +76,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [0, 0],
         score: 1,
+        color: 'red',
         cost: [
             [
                 [2, ResourceType.Stone],
@@ -97,8 +86,8 @@ export const buildings: Record<Buildings, BuildingCard> = {
             [[18, ResourceType.Cash]],
         ],
         onBuild: [
-            [[1, BuildingEffectType.Deploy]],
-            [[1, BuildingEffectType.Replace]],
+            [[1, EffectType.Deploy]],
+            [[1, EffectType.Replace]],
         ],
     },
     载具仓库: {
@@ -106,6 +95,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [0, 1200],
         score: 0,
+        color: 'red',
         cost: [
             [
                 [1, ResourceType.Stone],
@@ -115,10 +105,10 @@ export const buildings: Record<Buildings, BuildingCard> = {
         ],
         onBuild: [
             [
-                [1, BuildingEffectType.Remove],
-                [1, BuildingEffectType.Move],
+                [1, EffectType.Remove],
+                [1, EffectType.Move],
             ],
-            [[1, BuildingEffectType.Explore]],
+            [[1, EffectType.Explore]],
         ],
     },
     工业高炉: {
@@ -126,6 +116,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [0, 2400],
         score: 0,
+        color: 'red',
         cost: [
             [
                 [1, ResourceType.Stone],
@@ -143,6 +134,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [0, 3600],
         score: 1,
+        color: 'red',
         cost: [
             [
                 [2, ResourceType.Scrap],
@@ -158,6 +150,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [0, 4800],
         score: 0,
+        color: 'red',
         cost: [
             [
                 [2, ResourceType.Stone],
@@ -168,8 +161,8 @@ export const buildings: Record<Buildings, BuildingCard> = {
         ],
         onBuild: [
             [
-                [1, BuildingEffectType.Deploy],
-                [1, BuildingEffectType.Deploy],
+                [1, EffectType.Deploy],
+                [1, EffectType.Deploy],
             ],
         ],
     },
@@ -178,6 +171,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [850, 0],
         score: 0,
+        color: 'red',
         cost: [
             [
                 [2, ResourceType.Stone],
@@ -187,10 +181,10 @@ export const buildings: Record<Buildings, BuildingCard> = {
         ],
         onBuild: [
             [
-                [1, BuildingEffectType.Deploy],
-                [1, BuildingEffectType.Remove],
+                [1, EffectType.Deploy],
+                [1, EffectType.Remove],
             ],
-            [[1, BuildingEffectType.Build]],
+            [[1, EffectType.Build]],
         ],
     },
     简陋工程营: {
@@ -199,6 +193,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         imageOffset: [850, 1200],
         score: -1,
         unique: true,
+        color: 'black',
         cost: [
             [
                 [2, ResourceType.Stone],
@@ -207,7 +202,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
             [[8, ResourceType.Cash]],
         ],
         onBuild: [
-            [[1, BuildingEffectType.Build]],
+            [[1, EffectType.Build]],
         ],
     },
     开采电铲: {
@@ -215,6 +210,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [850, 2400],
         score: 0,
+        color: 'yellow',
         cost: [
             [
                 [1, ResourceType.Iron],
@@ -240,6 +236,7 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [850, 3600],
         score: 2,
+        color: 'yellow',
         cost: [
             [
                 [4, ResourceType.Stone],
@@ -255,6 +252,25 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [850, 4800],
         score: 0,
+        color: 'yellow',
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[4, ResourceType.Scrap]],
+        ],
+    },
+    源石精炼厂2: {
+        name: '源石精炼厂',
+        choices: [],
+        imageOffset: [2550, 4800],
+        score: 0,
+        color: 'blue',
         cost: [
             [
                 [1, ResourceType.Stone],
@@ -272,8 +288,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [1700, 0],
         score: 0,
+        color: 'yellow',
+        cost: [
+            [
+                [2, ResourceType.Iron],
+                [4, ResourceType.Scrap],
+            ],
+            [[20, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.CityMove]],
+            [[1, EffectType.CityMove]],
         ],
     },
     固源岩提纯厂: {
@@ -281,6 +305,25 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [1700, 1200],
         score: 0,
+        color: 'yellow',
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
+        onBuild: [
+            [[7, ResourceType.Stone]],
+        ],
+    },
+    固源岩提纯厂2: {
+        name: '固源岩提纯厂',
+        choices: [],
+        imageOffset: [3400, 4800],
+        score: 0,
+        color: 'red',
         cost: [
             [
                 [1, ResourceType.Stone],
@@ -299,8 +342,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         imageOffset: [1700, 2400],
         score: 2,
         unique: true,
+        color: 'yellow',
+        cost: [
+            [
+                [1, ResourceType.Crystal],
+                [2, ResourceType.Cash],
+            ],
+            [[24, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.BuildExpanding]],
+            [[1, EffectType.BuildExpanding]],
         ],
     },
     矿料筛斗: {
@@ -308,6 +359,14 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [1700, 3600],
         score: 0,
+        color: 'yellow',
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [2, ResourceType.Iron],
+            ],
+            [[12, ResourceType.Cash]],
+        ],
         onBuild: [
             [[5, ResourceType.Scrap]],
         ],
@@ -315,8 +374,17 @@ export const buildings: Record<Buildings, BuildingCard> = {
     改良动力燃烧室: {
         name: '改良动力燃烧室',
         choices: [],
+        color: 'yellow',
         imageOffset: [2550, 600],
         score: 1,
+        cost: [
+            [
+                [3, ResourceType.Stone],
+                [2, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+            [[19, ResourceType.Cash]],
+        ],
         onBuild: [],
     },
     运输舷梯: {
@@ -324,8 +392,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [2550, 1800],
         score: 0,
+        color: 'yellow',
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [2, ResourceType.Scrap],
+            ],
+            [[10, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.Harvest]],
+            [[1, EffectType.Harvest]],
         ],
     },
     城市化区域: {
@@ -333,8 +409,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [2550, 3000],
         score: 1,
+        color: 'blue',
+        cost: [
+            [
+                [3, ResourceType.Stone],
+                [2, ResourceType.Iron],
+            ],
+            [[16, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.Claim]],
+            [[1, EffectType.Claim]],
         ],
     },
     延伸枢纽: {
@@ -342,6 +426,8 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [2550, 4200],
         score: -1,
+        color: 'blue',
+        cost: [],
         onBuild: [],
     },
     贸易街区: {
@@ -349,8 +435,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [3400, 1200],
         score: 0,
+        color: 'blue',
+        cost: [
+            [
+                [1, ResourceType.Stone],
+                [1, ResourceType.Iron],
+            ],
+            [[6, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.Sell]],
+            [[1, EffectType.Sell]],
         ],
     },
     异铁冶炼厂: {
@@ -358,6 +452,15 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [3400, 2400],
         score: 1,
+        color: 'blue',
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [1, ResourceType.Iron],
+                [2, ResourceType.Scrap],
+            ],
+            [[15, ResourceType.Cash]],
+        ],
         onBuild: [
             [[4, ResourceType.Iron]],
         ],
@@ -367,14 +470,27 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [3400, 3600],
         score: 3,
+        color: 'any',
         unique: true,
+        cost: [
+            [
+                [3, ResourceType.Stone],
+                [3, ResourceType.Iron],
+                [3, ResourceType.Scrap],
+            ],
+            [[30, ResourceType.Cash]],
+        ],
+        onBuild: [],
     },
     核心指挥塔: {
         name: '核心指挥塔',
         choices: [],
         imageOffset: [4250, 0],
+        color: 'any',
         score: 0,
         unique: true,
+        cost: [],
+        onBuild: [],
     },
     附属能源设施: {
         name: '附属能源设施',
@@ -382,8 +498,17 @@ export const buildings: Record<Buildings, BuildingCard> = {
         imageOffset: [4250, 2400],
         score: 1,
         unique: true,
+        color: 'any',
+        cost: [
+            [
+                [2, ResourceType.Stone],
+                [3, ResourceType.Iron],
+                [2, ResourceType.Scrap],
+            ],
+            [[23, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.Trigger]],
+            [[1, EffectType.Trigger]],
         ],
     },
     联邦理事处: {
@@ -391,8 +516,16 @@ export const buildings: Record<Buildings, BuildingCard> = {
         choices: [],
         imageOffset: [4250, 3600],
         score: 1,
+        color: 'any',
+        cost: [
+            [
+                [4, ResourceType.Stone],
+                [2, ResourceType.Scrap],
+            ],
+            [[17, ResourceType.Cash]],
+        ],
         onBuild: [
-            [[1, BuildingEffectType.SetEnd]],
+            [[1, EffectType.SetEnd]],
         ],
     },
 };

@@ -6,6 +6,7 @@ import React from 'react';
 import { Building, Character } from '../common/card.tsx';
 import { GameState } from '../common/interface.ts';
 import PlayerStatus from '../common/PlayerStatus.tsx';
+import { stageHint } from '../common/stageHints.ts';
 import type { GameInfo3 } from './game.ts';
 import { Map } from './map.tsx';
 
@@ -28,6 +29,7 @@ export function Board(props: GameProps) {
     console.log(props.G);
     console.log(props);
     const currentPlayerStatus = props.G.players[props.playerID!];
+    const stage = props.G.currentStage;
 
     const [buildingOpen, setBuildingOpen] = React.useState(false);
     const [buildingHover, setBuildingHover] = React.useState(false);
@@ -36,7 +38,8 @@ export function Board(props: GameProps) {
     const [charactersHover, setCharactersHover] = React.useState(false);
     const [charactersPanelHover, setCharactersPanelHover] = React.useState(false);
     const [buildingSelected, setBuildingSelected] = React.useState<number | null>(null);
-    console.log([buildingSelected, props.G.shownBuildings[buildingSelected!]]);
+    const selectBuildingPosition = props.isActive && stage === 'placeBuilding';
+    const selectBuildingEffect = props.isActive && stage === 'selectBuildingEffect';
 
     return <div style={{
         width: '100vw',
@@ -54,25 +57,34 @@ export function Board(props: GameProps) {
                 <div id="gameMap">
                     <Map {...props} />
                     <div>
+                        {props.isActive && <button onClick={() => props.undo()}>撤销</button>}
                         <button
                             onClick={() => setBuildingOpen(!buildingOpen)}
                             onMouseOver={() => setBuildingHover(true)}
                             onMouseLeave={() => setTimeout(() => setBuildingHover(false), 300)}
-                        >建造</button>
+                        >建筑</button>
                         &nbsp;
                         <button
                             onClick={() => setCharactersOpen(!charactersOpen)}
                             onMouseOver={() => setCharactersHover(true)}
                             onMouseLeave={() => setTimeout(() => setCharactersHover(false), 300)}
                         >角色</button>
-                        {props.isActive && currentPlayerStatus.currentStage === 'quickAction' && <button
+                        {props.isActive && stage === 'quickAction' && <button
                             onClick={() => props.moves.Abort()}
                         >跳过快速行动</button>}
                         &nbsp;{props.isActive && <p style={{ display: 'inline-block' }}>
                             你的回合
                             {props.ctx.phase === 'pickCharacter' && '请选择一个角色盖放'}
-                            {currentPlayerStatus.currentStage === 'quickAction' && '快速行动阶段'}
+                            {props.ctx.phase === 'main' && (stageHint[stage as any] || stage)}
                         </p>}
+                        {props.isActive && stage === 'mainAction' && <>
+                            选择一项操作：
+                            <button onClick={() => props.moves.gotoBuild()}>建设</button>
+                            <button onClick={() => props.moves.gotoExplore()}>探索</button>
+                            <button onClick={() => props.moves.gotoMove()}>调度</button>
+                            <button onClick={() => props.moves.gotoDeploy()}>部署</button>
+                            <button onClick={() => props.moves.gotoCityMove()}>城市移动</button>
+                        </>}
                     </div>
                 </div>
                 <div id="buildingPanel" style={{
@@ -82,8 +94,16 @@ export function Board(props: GameProps) {
                     {props.G.shownBuildings[buildingSelected!]?.cost?.map((i, index) => <div
                         onClick={() => {
                             setBuildingSelected(null);
+                            if (stage === 'mainAction') props.moves.gotoBuild();
                             props.moves.Build(buildingSelected, index);
                         }}
+                    >{JSON.stringify(i)}</div>)}
+                </div>
+                <div id="buildingEffectPanel" style={{
+                    display: selectBuildingEffect ? 'inherit' : 'none',
+                }}>
+                    {props.G.pendingBuilding?.onBuild?.map((i, index) => <div
+                        onClick={() => props.moves.SelectBuildingEffect(index)}
                     >{JSON.stringify(i)}</div>)}
                 </div>
                 <div
@@ -145,7 +165,7 @@ export function Board(props: GameProps) {
                         moves={props.moves}
                         status={player}
                         key={player.id}
-                        {...(props.playerID === player.id && props.isActive && props.G.pendingBuilding ? { pendingBuilding: props.G.pendingBuilding } : {})}
+                        {...(props.playerID === player.id && selectBuildingPosition ? { pendingBuilding: props.G.pendingBuilding } : {})}
                     />)}
                 </div>
             </Allotment.Pane>

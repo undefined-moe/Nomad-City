@@ -1,4 +1,6 @@
-import { Card, EventType, ResourceType } from './interface';
+import {
+    Card, EffectType, EventType, ResourceType,
+} from './interface';
 
 export const EventCards: Record<EventType, Card[]> = {
     [EventType.Green]: [{
@@ -99,7 +101,51 @@ export const EventCards: Record<EventType, Card[]> = {
         }, {
             name: '选择富森银行',
             effect: [
+                [4, ResourceType.Cash],
+                [1, EffectType.Score],
+            ],
+        }],
+    }, {
+        name: '洞穴遗迹',
+        type: ResourceType.Stone,
+        choices: [{
+            name: '爆破！我们不是来考古的',
+            effect: [
                 [5, ResourceType.Stone],
+            ],
+        }, {
+            name: '给梅兰德历史协会写一封信',
+            effect: [
+                [10, ResourceType.Cash],
+            ],
+        }],
+    }, {
+        name: '饮水地',
+        type: ResourceType.Stone,
+        choices: [{
+            name: '建造一个水塔',
+            effect: [
+                [5, ResourceType.Scrap],
+            ],
+        }, {
+            name: '建造一个水塔',
+            effect: [
+                [12, ResourceType.Cash],
+                [1, EffectType.OthersAddStone],
+            ],
+        }],
+    }, {
+        name: '锈锤领地',
+        type: ResourceType.Scrap,
+        choices: [{
+            name: '尝试打听矿产的消息',
+            effect: [
+                [5, ResourceType.Scrap],
+            ],
+        }, {
+            name: '交换一些商队的遗留物',
+            effect: [
+                [10, ResourceType.Cash],
             ],
         }],
     }],
