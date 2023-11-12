@@ -79,7 +79,7 @@ function getWorkerNode(G: GameState<GameInfo3>, target: string) {
     return [item, idx, id] as const;
 }
 
-export function Map(props: BoardProps<GameState<GameInfo3>>) {
+export function Map(props: BoardProps<GameState<GameInfo3>> & { setWorkerNodes: (i: string[]) => void }) {
     const ref = React.useRef<HTMLImageElement>(null);
     useResizeObserver();
     const stage = props.G.currentStage;
@@ -92,6 +92,12 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
             setWorkerSelection([...workerSelection, id]);
         }
     };
+    React.useEffect(() => {
+        props.setWorkerNodes(workerSelection);
+    }, [workerSelection]);
+    React.useEffect(() => {
+        setWorkerSelection([]);
+    }, [props.ctx.phase]);
 
     // eslint-disable-next-line consistent-return
     function onClick(e: React.MouseEvent<HTMLImageElement, MouseEvent>) {
@@ -173,6 +179,9 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
             size: [90, 90],
             selected: workerSelection.includes(id),
             onClick: () => {
+                if (props.ctx.phase === 'harvest' && !isRoom) {
+                    updateWorkerSelection(id);
+                }
                 if (stage === 'Explore') {
                     if (isRoom) {
                         if (t.relatedCard) return null;

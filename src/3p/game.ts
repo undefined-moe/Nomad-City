@@ -199,7 +199,7 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                 cards: [
                     clone(characters['坎诺特']),
                     clone(characters['锡人']),
-                    clone(characters['极境']),
+                    clone(characters['玛恩纳']),
                     clone(characters['雷蛇']),
                     clone(characters['德克萨斯']),
                 ],
@@ -293,17 +293,9 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
         pickCharacter: {
             next: 'action',
             turn: {
-                order: TurnOrder.ONCE,
-                onBegin: ({ G }) => {
-                    for (const p in G.players) {
-                        if (!G.players[p].cards.length) {
-                            G.players[p].cards = G.players[p].usedCards;
-                            G.players[p].usedCards = [];
-                        }
-                        console.log('pick');
-                        G.turn++;
-                        G.count = 6;
-                    }
+                order: {
+                    first: () => 0,
+                    next: () => undefined,
                 },
                 activePlayers: {
                     all: {
@@ -314,13 +306,18 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                 stages: {
                     pickCharacter: {
                         moves: {
-                            PickCharacter({ G, playerID, events }, index: number) {
+                            PickCharacter({
+                                G, playerID, events, ctx,
+                            }, index: number) {
                                 if (!G.players[playerID].cards[index]) return INVALID_MOVE;
                                 const card = G.players[playerID].cards.splice(index, 1)[0];
                                 G.players[playerID].activeCharacter = card;
                                 G.players[playerID].harvest = false;
                                 G.stageQueue = ['mainAction'];
                                 if (Object.values(G.players).every((p) => p.activeCharacter)) {
+                                    G.turnBegin++;
+                                    G.turn++;
+                                    G.count = ctx.numPlayers * 2;
                                     events.endPhase();
                                 }
                             },
@@ -339,21 +336,17 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
             },
             turn: {
                 order: {
-                    first: ({ G }) => {
-                        G.turnBegin++;
-                        return G.turnBegin - 1;
-                    },
-                    next: ({ G, ctx }) => {
-                        if (!G.count) return undefined;
-                        G.count--;
-                        return (ctx.playOrderPos + 1) % ctx.numPlayers;
-                    },
+                    first: ({ G }) => G.turnBegin,
+                    next: ({ G, ctx }) => (G.count ? ((ctx.playOrderPos + 1) % ctx.numPlayers) : undefined),
                 },
                 onMove: ({ G, events }) => {
                     if (G.currentStage === 'quickAction') return;
                     if (G.currentStage === 'godMode') return;
                     const next = G.stageQueue.shift();
-                    if (!next) return events.endTurn();
+                    if (!next) {
+                        G.count!--;
+                        return events.endTurn();
+                    }
                     console.log(`to ${next}`);
                     G.currentStage = next;
                     events.setStage(next);

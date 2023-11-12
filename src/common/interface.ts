@@ -20,6 +20,17 @@ export enum ResourceType {
     /** 源石 */
     Crystal = 'Crystal',
 }
+export const ResourceDisplay = {
+    [ResourceType.Scrap]: '粗制源石',
+    [ResourceType.Stone]: '源岩',
+    [ResourceType.Iron]: '异铁',
+    [ResourceType.Cash]: '钱',
+    [ResourceType.Crystal]: '源石',
+};
+
+export function isResourceType(type: string): type is ResourceType {
+    return type in ResourceType;
+}
 
 export type Effects = [number, EffectType | ResourceType][];
 export enum EffectType {
@@ -45,6 +56,10 @@ export enum EffectType {
     RemoveAndScore = 'RemoveAndScore', // 角色::山 +
     SelectBuildingColor = 'SelectBuildingColor', // 角色::玛恩纳 +
     ReturnBuilding = 'ReturnBuilding', // 角色::玛恩纳 +
+    ForceSellAllIron = 'ForceSellAllIron', // 角色::银灰 +
+    ForceSellAllStone = 'ForceSellAllStone', // 角色::银灰 +
+    ForceSellAllScrap = 'ForceSellAllScrap', // 角色::银灰 +
+    RemoveForAll = 'RemoveForAll', // 角色::银灰 +
 }
 
 export interface CardChoice {

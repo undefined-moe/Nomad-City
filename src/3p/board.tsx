@@ -4,6 +4,7 @@ import { Allotment } from 'allotment';
 import type { BoardProps } from 'boardgame.io/react';
 import React from 'react';
 import { Building, Character } from '../common/card.tsx';
+import { renderEffects } from '../common/effect.tsx';
 import { GameState } from '../common/interface.ts';
 import PlayerStatus from '../common/PlayerStatus.tsx';
 import { stageHint } from '../common/stageHints.ts';
@@ -38,6 +39,7 @@ export function Board(props: GameProps) {
     const [charactersHover, setCharactersHover] = React.useState(false);
     const [charactersPanelHover, setCharactersPanelHover] = React.useState(false);
     const [buildingSelected, setBuildingSelected] = React.useState<number | null>(null);
+    const [workerNodesSelected, setWorkerNodesSelected] = React.useState<string[]>([]);
     const selectBuildingPosition = props.isActive && stage === 'placeBuilding';
     const selectBuildingEffect = props.isActive && stage === 'selectBuildingEffect';
 
@@ -55,7 +57,7 @@ export function Board(props: GameProps) {
         }}>
             <Allotment.Pane minSize={200}>
                 <div id="gameMap">
-                    <Map {...props} />
+                    <Map setWorkerNodes={setWorkerNodesSelected} {...props} />
                     <div>
                         {props.isActive && <button onClick={() => props.undo()}>撤销</button>}
                         <button
@@ -72,6 +74,7 @@ export function Board(props: GameProps) {
                         {props.isActive && stage === 'quickAction' && <button
                             onClick={() => props.moves.Abort()}
                         >跳过快速行动</button>}
+                        &nbsp;{props.ctx.phase}第{props.G.turn}回合 count{props.G.count}
                         &nbsp;{props.isActive && <p style={{ display: 'inline-block' }}>
                             你的回合
                             {' '}
@@ -86,6 +89,11 @@ export function Board(props: GameProps) {
                             <button onClick={() => props.moves.gotoMove()}>调度</button>
                             <button onClick={() => props.moves.gotoDeploy()}>部署</button>
                             <button onClick={() => props.moves.gotoCityMove()}>城市移动</button>
+                        </>}
+                        {props.isActive && props.ctx.phase === 'harvest' && <>
+                            <br />
+                            收集资源：请选择希望经过的路径点，将自动收集资源
+                            <button onClick={() => props.moves.Harvest(workerNodesSelected.join(','))}>确认选择</button>
                         </>}
                     </div>
                 </div>
@@ -106,7 +114,7 @@ export function Board(props: GameProps) {
                 }}>
                     {props.G.pendingBuilding?.onBuild?.map((i, index) => <div
                         onClick={() => props.moves.SelectBuildingEffect(index)}
-                    >{JSON.stringify(i)}</div>)}
+                    >{renderEffects(i)}</div>)}
                 </div>
                 <div
                     style={{
@@ -143,7 +151,7 @@ export function Board(props: GameProps) {
                         <div>
                             <p>{props.G.pendingCard.name}</p>
                             {props.G.pendingCard.choices.map((c, i) => <div onClick={() => props.moves.SelectChoice(i)}>
-                                {c.name} {c.effect.map(([d, t]) => <p style={{ display: 'inline-block' }}>{d > 0 ? '+' : '-'}{d} {t}&nbsp;&nbsp;</p>)}
+                                {c.name} {renderEffects(c.effect)}
                             </div>)}
                         </div>
                     )}

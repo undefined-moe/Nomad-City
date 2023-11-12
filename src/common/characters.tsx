@@ -5,7 +5,7 @@ export interface CharacterCard {
     effectName: [string, string];
     策略: [number, ResourceType | EffectType][][];
     计谋: [number, ResourceType | EffectType][][];
-    imageOffset: number;
+    imageOffset: [number, number];
 }
 
 export enum Characters {
@@ -30,7 +30,7 @@ export const characters: Record<Characters, CharacterCard> = {
             [-3, ResourceType.Cash],
             [1, EffectType.Replace],
         ]],
-        imageOffset: 0,
+        imageOffset: [0, 0],
     },
     德克萨斯: {
         name: '德克萨斯',
@@ -44,7 +44,7 @@ export const characters: Record<Characters, CharacterCard> = {
             [1, EffectType.Remove],
             [2, EffectType.Move],
         ]],
-        imageOffset: 600,
+        imageOffset: [0, 600],
     },
     锡人: {
         name: '锡人',
@@ -60,11 +60,11 @@ export const characters: Record<Characters, CharacterCard> = {
         计谋: [[
             [1, EffectType.CollectCharacter],
         ]],
-        imageOffset: 1200,
+        imageOffset: [0, 1200],
     },
     坎诺特: {
         name: '坎诺特',
-        imageOffset: 1800,
+        imageOffset: [0, 1800],
     },
     山: {
         name: '山',
@@ -73,7 +73,7 @@ export const characters: Record<Characters, CharacterCard> = {
             [1, EffectType.RemoveAndScore],
         ]],
         计谋: [], // FIXME 奥秘结算
-        imageOffset: 2400,
+        imageOffset: [0, 2400],
     },
     玛恩纳: {
         name: '玛恩纳',
@@ -84,10 +84,19 @@ export const characters: Record<Characters, CharacterCard> = {
         计谋: [[
             [1, EffectType.ReturnBuilding],
         ]],
-        imageOffset: 3000,
+        imageOffset: [0, 3000],
     },
-    极境: {
-        name: '极境',
-        imageOffset: 3600,
+    银灰: {
+        name: '银灰',
+        effectName: ['商业手腕', '制衡战略'],
+        策略: [
+            [[1, EffectType.ForceSellAllIron]],
+            [[1, EffectType.ForceSellAllStone]],
+            [[1, EffectType.ForceSellAllScrap]],
+        ],
+        计谋: [[
+            [1, EffectType.RemoveForAll],
+            [2, EffectType.Deploy],
+        ]],
     },
 };

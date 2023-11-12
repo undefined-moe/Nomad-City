@@ -17,7 +17,7 @@ export default function PlayerStatus({
     const ref = React.useRef<HTMLImageElement>();
     useResizeObserver();
 
-    return <div>
+    return <div style={playerID === status.id ? { border: '3px solid', borderColor: 'green' } : {}}>
         <div style={{ position: 'relative' }}>
             <div style={{
                 position: 'absolute',
@@ -80,9 +80,10 @@ export default function PlayerStatus({
                     left: 10 / 2600 * ref.current.clientWidth,
                     top: 1990 / 3600 * ref.current.clientHeight,
                 }}>
-                    {status.id === playerID
-                        ? <Character height={ref.current!.clientHeight / 4.2} offset={status.activeCharacter.imageOffset} />
-                        : <Character height={ref.current!.clientHeight / 4.2} />}
+                    <Character
+                        height={ref.current!.clientHeight / 4.2}
+                        offset={status.activeCharacter.imageOffset}
+                    />
                 </div>}
             </div>}
         </div>

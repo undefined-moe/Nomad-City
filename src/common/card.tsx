@@ -12,25 +12,23 @@ const hoverStyle: React.CSSProperties = {
     borderImageOutset: '1cm',
 };
 
-export function Character(props: { offset?: number, height: number, onClick?: any }) {
+export function Character(props: {
+    offset?: [number, number],
+    height: number,
+    onClick?: any,
+    hide?: boolean,
+}) {
     const [hover, setHover] = React.useState(false);
     const zoom = props.height / 800;
 
-    if (typeof props.offset !== 'number') {
-        return <div style={{
-            width: 600,
-            height: 800,
-            background: `url(${CharacterBack}) no-repeat`,
-            zoom,
-            display: 'inline-block',
-        }} />;
-    }
     return <>
         <div
             style={{
                 width: 600,
                 height: 800,
-                background: `url(${CharacterImage}) no-repeat -${props.offset}px 0px`,
+                background: (props.offset && !props.hide)
+                    ? `url(${CharacterImage}) no-repeat -${props.offset[1]}px -${props.offset[0]}px`
+                    : `url(${CharacterBack}) no-repeat`,
                 zoom,
                 display: 'inline-block',
                 ...(hover ? hoverStyle : {}),
@@ -39,14 +37,14 @@ export function Character(props: { offset?: number, height: number, onClick?: an
             onMouseOut={() => setHover(false)}
             onClick={props.onClick || (() => { })}
         />
-        {hover && <div
+        {props.offset && hover && <div
             style={{
                 position: 'fixed',
                 top: 0,
                 left: 0,
                 width: 600,
                 height: 800,
-                background: `url(${CharacterImage}) no-repeat -${props.offset}px 0px`,
+                background: `url(${CharacterImage}) no-repeat -${props.offset[1]}px -${props.offset[0]}px`,
                 zoom: 0.6,
                 display: 'inline-block',
             }}
