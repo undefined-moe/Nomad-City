@@ -330,15 +330,8 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                             gotoBuild({ G }) {
                                 G.stageQueue.unshift('Build');
                             },
-                            Explore({ G, events }, target: string) {
-                                if (!isValidRoom(target)) return INVALID_MOVE;
-                                const room = G.map.rooms[target];
-                                if (room.main || room.relatedCard) return INVALID_MOVE;
-                                // TODO route planning and fee
-                                if (G.def.eventType[target] === EventType.Red && G.turn <= 4) return INVALID_MOVE;
-                                const card = G.cards[G.def.eventType[target]].pop();
-                                room.relatedCard = card;
-                                G.pendingCard = card;
+                            gotoExplore({ G }) {
+                                G.stageQueue.unshift('Explore');
                             },
                             Special() { },
                         },
@@ -443,6 +436,49 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                     G.pendingCard = card;
                                     G.stageQueue.unshift('cardChoice');
                                 }
+                            },
+                        },
+                    },
+                    Explore: {
+                        moves: {
+                            Explore({ G, playerID }, target: string/** workernode */, payment: string/** worker nodes */) {
+                                const [item, idx, id] = getWorkerNode(G, target);
+                                if (!item || !isValidRoom(id) || item.main || item.relatedCard) return INVALID_MOVE;
+                                const currentPosition = Object.entries(G.map.rooms).find(([, v]) => v.main === playerID)![0] as RoomNames3;
+                                const paymentNodes = payment.split(',');
+                                if (paymentNodes.length * 2 > G.players[playerID].resources[ResourceType.Cash]) return INVALID_MOVE;
+                                for (const key of paymentNodes) {
+                                    const [i, index] = getWorkerNode(G, key);
+                                    console.log(111, key, i, index);
+                                    if (!i.workers[index] && i.workers[index === 1 ? 0 : 1]) return INVALID_MOVE;
+                                }
+                                const unused = new Set(paymentNodes);
+                                const reachable = new Set<RoomNames3>([currentPosition]);
+                                let newNode = true;
+                                while (newNode) {
+                                    newNode = false;
+                                    for (const paymentNode of unused) {
+                                        const [, , i] = getWorkerNode(G, paymentNode);
+                                        if (isValidRoom(i)) return INVALID_MOVE; // only accept nodes as route
+                                        if (Array.from(reachable).some((i) => i.includes(i))) {
+                                            for (const r of i.split('-')) reachable.add(r as RoomNames3);
+                                            unused.delete(paymentNode);
+                                            newNode = true;
+                                        }
+                                    }
+                                }
+                                if (!reachable.has(id)) return INVALID_MOVE;
+                                if (G.def.eventType[id] === EventType.Red && G.turn <= 4) return INVALID_MOVE;
+                                G.players[playerID].resources[ResourceType.Cash] -= paymentNodes.length * 2;
+                                for (const key of paymentNodes) {
+                                    const [{ workers }, index] = getWorkerNode(G, key);
+                                    if (workers[index]) G.players[workers[index]].resources[ResourceType.Cash] += 2;
+                                }
+                                const card = G.cards[G.def.eventType[id]].pop();
+                                item.relatedCard = card;
+                                item.workers[idx] = playerID;
+                                G.pendingCard = card;
+                                G.stageQueue.unshift('cardChoice');
                             },
                         },
                     },

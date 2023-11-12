@@ -4,7 +4,9 @@ import GameMap3 from '../assets/gameMap3.jpg';
 import { GameState, RoomInfo } from '../common/interface';
 import { useResizeObserver } from '../common/resizeObserver';
 import { ResourceImage } from '../common/resourceImages';
-import { Bound, interactiveElements } from './elements';
+import {
+    Bound, interactiveElements, workElements,
+} from './elements';
 import { GameInfo3, RoomNames3 } from './game';
 
 const selectedStyle: React.CSSProperties = {
@@ -40,7 +42,9 @@ function Decoration(props: { decoration: MapDecoration, img?: HTMLImageElement |
     if (props.decoration.color) {
         return <div style={style} onClick={onClick} >
             <div style={{
-                width: '100%', height: '100%', backgroundColor: props.decoration.color, opacity: 0.5,
+                width: '100%',
+                height: '100%',
+                ...(props.decoration.color === 'transparent' ? { opacity: 0 } : { backgroundColor: props.decoration.color, opacity: 0.5 }),
             }} />
         </div>;
     }
@@ -81,6 +85,13 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
     const stage = props.G.currentStage;
     const [selfCitySelected, setSelfCitySelected] = React.useState(false);
     const [workerSelection, setWorkerSelection] = React.useState<string[]>([]);
+    const updateWorkerSelection = (id) => {
+        if (workerSelection.includes(id)) {
+            setWorkerSelection(workerSelection.filter((i) => i !== id));
+        } else {
+            setWorkerSelection([...workerSelection, id]);
+        }
+    };
 
     // eslint-disable-next-line consistent-return
     function onClick(e: React.MouseEvent<HTMLImageElement, MouseEvent>) {
@@ -97,19 +108,6 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
             if (selfCitySelected && element.type === 'room') {
                 if (stage === 'mainAction') props.moves.gotoCityMove();
                 return props.moves.CityMove(id);
-            }
-            if (element.type === 'work' && ['mainAction', 'Deploy'].includes(stage)) {
-                const [item, idx] = getWorkerNode(props.G, id);
-                const current = item.workers[+idx];
-                if (!current) {
-                    if (!workerSelection.length) {
-                        if (stage === 'mainAction') props.moves.gotoDeploy();
-                        return props.moves.Deploy(id);
-                    }
-                    setWorkerSelection([]);
-                    if (stage === 'mainAction') props.moves.gotoMove();
-                    return props.moves.Move(workerSelection[0], id);
-                }
             }
         }
     }
@@ -163,45 +161,39 @@ export function Map(props: BoardProps<GameState<GameInfo3>>) {
             });
         }
     }
-    for (const [id, t] of Object.entries(props.G.map.rooms).concat(Object.entries(props.G.map.nodes)) as [RoomNames3, RoomInfo][]) {
-        const position = interactiveElements[id].bound[0];
-        if (t.workers[0]) {
-            decorations.push({
-                color: colorOfPlayer[t.workers[0]],
-                position: [position[0] + 90, position[1] + 235],
-                size: [90, 90],
-                ...(t.workers[0] === props.playerID ? {
-                    onClick: () => {
-                        if (workerSelection.includes(`${id}-0`)) {
-                            setWorkerSelection(workerSelection.filter((i) => i !== `${id}-0`));
-                        } else {
-                            setWorkerSelection([...workerSelection, `${id}-0`]);
-                        }
-                    },
-                    selected: workerSelection.includes(`${id}-0`),
-                } : {}),
-            });
-        }
-        if (t.workers[1]) {
-            decorations.push({
-                color: colorOfPlayer[t.workers[1]],
-                position: [position[0] + 90, position[1] + 335],
-                size: [90, 90],
-                ...(t.workers[1] === props.playerID ? {
-                    onClick: () => {
-                        if (workerSelection.includes(`${id}-1`)) {
-                            setWorkerSelection(workerSelection.filter((i) => i !== `${id}-1`));
-                        } else {
-                            setWorkerSelection([...workerSelection, `${id}-1`]);
-                        }
-                    },
-                    selected: workerSelection.includes(`${id}-1`),
-                } : {}),
-            });
-        }
+    for (const [id, inf] of Object.entries(workElements)) {
+        const position = inf.bound[0];
+        const [t, idx, name] = getWorkerNode(props.G, id);
+        const isRoom = isValidRoom(name);
+        const current = t.workers[idx];
+        const color = current ? colorOfPlayer[current] : 'transparent';
+        decorations.push({
+            color,
+            position: [position[0], position[1]],
+            size: [90, 90],
+            selected: workerSelection.includes(id),
+            onClick: () => {
+                if (stage === 'Explore') {
+                    if (isRoom) {
+                        if (t.relatedCard) return null;
+                        setWorkerSelection([]);
+                        console.log(id, workerSelection.join(','));
+                        return props.moves.Explore(id, workerSelection.join(','));
+                    }
+                    updateWorkerSelection(id);
+                }
+                if ((!isRoom || t.relatedCard) && !current) {
+                    if (stage === 'Deploy') {
+                        return props.moves.Deploy(id);
+                    }
+                    if (stage === 'Move' && workerSelection.length) {
+                        setWorkerSelection([]);
+                        return props.moves.Move(workerSelection[0], id);
+                    }
+                }
+            },
+        });
     }
-
-    console.log(decorations);
 
     return <>
         <img

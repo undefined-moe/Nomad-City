@@ -74,10 +74,12 @@ export function Board(props: GameProps) {
                         >跳过快速行动</button>}
                         &nbsp;{props.isActive && <p style={{ display: 'inline-block' }}>
                             你的回合
+                            {' '}
                             {props.ctx.phase === 'pickCharacter' && '请选择一个角色盖放'}
-                            {props.ctx.phase === 'main' && (stageHint[stage as any] || stage)}
+                            {props.ctx.phase === 'action' && (stageHint[stage as any] || stage)}
                         </p>}
                         {props.isActive && stage === 'mainAction' && <>
+                            <br />
                             选择一项操作：
                             <button onClick={() => props.moves.gotoBuild()}>建设</button>
                             <button onClick={() => props.moves.gotoExplore()}>探索</button>

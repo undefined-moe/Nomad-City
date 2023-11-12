@@ -1,7 +1,7 @@
 import { GameInfo3, type NodeNames3, type RoomNames3 } from './game.ts';
 
 export type Bound = readonly [readonly [number, number], readonly [number, number]];
-type WorkName = `${RoomNames3 | NodeNames3}-${'0' | '1'}`;
+export type WorkName = `${RoomNames3 | NodeNames3}-${'0' | '1'}`;
 interface MapElement<T extends 'room' | 'node' | 'work'> {
     type: T;
     bound: Bound;
@@ -51,7 +51,7 @@ const nodeElements = Object.fromEntries(Object.entries({
     'F01-F03': [[785, 1501], [995, 1602]],
 } as const satisfies Record<NodeNames3, Bound>).map(([k, v]) => [k, { type: 'node', bound: v }])) as Record<NodeNames3, MapElement<'node'>>;
 
-const workElements: Record<WorkName, MapElement<'work'>> = {} as any;
+export const workElements: Record<WorkName, MapElement<'work'>> = {} as any;
 for (const room of GameInfo3.rooms) {
     const roomBound = roomElements[room].bound;
     workElements[`${room}-0`] = {
