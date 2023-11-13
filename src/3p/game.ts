@@ -164,6 +164,17 @@ const Callback: Record<string, (G: GameState<GameInfo3>, playerID: string, ...ar
             G.players[playerID].resources[type] += amount;
         }
     },
+    泥岩_计谋(G, playerID, target) {
+        const [item, idx, id] = getWorkerNode(G, target);
+        item.workers[idx] = undefined;
+        const related = Object.entries(G.def.regions).find(([, v]) => v.includes(id))![0];
+        const rooms = G.def.regions[related].filter((i) => isValidRoom(i));
+        for (const r of rooms) {
+            if (r.relatedCard) {
+                G.players[playerID].resources[r.relatedCard.type!] += 1;
+            }
+        }
+    },
 };
 
 function processEffect(G: GameState<GameInfo3>, playerID: string, effect: Effects) {
@@ -268,6 +279,10 @@ function processEffect(G: GameState<GameInfo3>, playerID: string, effect: Effect
             G.stageQueue.unshift('selectBuilding');
             G.callback = '玛恩纳_计谋';
             G.expectedCallbackArguments = 2;
+        } else if (type === EffectType.泥岩_计谋) {
+            G.stageQueue.unshift('selectSelfWorker');
+            G.callback = '泥岩_计谋';
+            G.expectedCallbackArguments = 1;
         } else {
             console.log('unknown effect type:', type);
         }
@@ -293,11 +308,11 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                     Crystal: 0,
                 },
                 cards: [
-                    clone(characters['坎诺特']),
                     clone(characters['锡人']),
                     clone(characters['玛恩纳']),
                     clone(characters['雷蛇']),
                     clone(characters['德克萨斯']),
+                    clone(characters['W']),
                 ],
                 usedCards: [],
                 buildings: [
@@ -592,6 +607,16 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 item.workers[idx] = undefined;
                             },
                             Cancel() { },
+                        },
+                    },
+                    selectSelfWorker: {
+                        moves: {
+                            SelectSelfWorker({ G, playerID }, target: string) {
+                                const [item, idx] = getWorkerNode(G, target);
+                                if (!item?.workers[idx]) return INVALID_MOVE;
+                                if (item.workers[idx] !== playerID) return INVALID_MOVE;
+                                G.callbackArguments.push(target);
+                            },
                         },
                     },
                     removeForAll: {

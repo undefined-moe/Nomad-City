@@ -6,16 +6,18 @@ export interface CharacterCard {
     策略: [number, ResourceType | EffectType][][];
     计谋: [number, ResourceType | EffectType][][];
     imageOffset: [number, number];
+    meta?: Record<string, any>;
 }
 
 export enum Characters {
-    '雷蛇' = '雷蛇',
-    '德克萨斯' = '德克萨斯',
-    '锡人' = '锡人',
-    '坎诺特' = '坎诺特',
-    '山' = '山',
-    '玛恩纳' = '玛恩纳',
-    '极境' = '极境',
+    雷蛇 = '雷蛇',
+    德克萨斯 = '德克萨斯',
+    锡人 = '锡人',
+    山 = '山',
+    玛恩纳 = '玛恩纳',
+    极境 = '极境',
+    银灰 = '银灰',
+    W = 'W',
 }
 
 export const characters: Record<Characters, CharacterCard> = {
@@ -62,10 +64,6 @@ export const characters: Record<Characters, CharacterCard> = {
         ]],
         imageOffset: [0, 1200],
     },
-    坎诺特: {
-        name: '坎诺特',
-        imageOffset: [0, 1800],
-    },
     山: {
         name: '山',
         effectName: ['外交施压', '秘密合同'],
@@ -98,5 +96,31 @@ export const characters: Record<Characters, CharacterCard> = {
             [2, EffectType.Deploy],
             [1, EffectType.RemoveForAll],
         ]],
+        imageOffset: [0, 3600],
+    },
+    W: {
+        name: 'W',
+        effectName: ['伺机出动', '致命攻势'],
+        策略: [[
+            [3, EffectType.Deploy],
+            [2, EffectType.PendingRemove],
+        ]],
+        计谋: [[
+            [-4, ResourceType.Cash],
+            [2, EffectType.Replace],
+        ]],
+        imageOffset: [850, 0],
+    },
+    泥岩: {
+        name: '泥岩',
+        effectName: ['沃土予身', '秽壤血脉'],
+        策略: [[
+            [1, EffectType.Deploy],
+            [1, EffectType.PendingRemove],
+        ]],
+        计谋: [[
+            [1, EffectType.泥岩],
+        ]],
+        imageOffset: [850, 1200],
     },
 };

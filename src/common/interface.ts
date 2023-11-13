@@ -63,6 +63,7 @@ export enum EffectType {
     SuperDeploy = 'SuperDeploy', // 城市::军工化区域
     ExtraMainAction = 'ExtraMainAction', // 城市::源石工业中枢
     RemoveCharacterCard = 'RemoveCharacterCard', // 禁止使用角色牌
+    泥岩_计谋 = '泥岩_计谋', // +
 }
 
 export interface CardChoice {

@@ -182,7 +182,11 @@ export function Map(props: BoardProps<GameState<GameInfo3>> & { setWorkerNodes: 
                 if (props.ctx.phase === 'harvest' && !isRoom) {
                     updateWorkerSelection(id);
                 }
+                if (!props.isActive) return null;
                 if (stage === 'removeForAll') updateWorkerSelection(id);
+                if (stage === 'selectSelfWorker' && current === props.ctx.currentPlayer) {
+                    return props.moves.SelectSelfWorker(id);
+                }
                 if (stage === 'Explore') {
                     if (isRoom) {
                         if (!workerSelection.length) alert('请先选择到达终点的路径');

@@ -6,6 +6,7 @@ export const stageHint: Record<string, string> = {
     Explore: '选择一处地点进行探索',
     selectBuilding: '选择一个建筑：',
     selectEffect: '选择一个效果：',
+    selectSelfWorker: '选择一个你自己的影响力：',
     selectBuildingToRemove: '选择一个建筑，将其放置在底部',
     removeForAll: '选择每个玩家的一个影响力，将其移除',
     selectBuildingColor: '选择一个建筑颜色：',
