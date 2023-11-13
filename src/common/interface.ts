@@ -51,15 +51,15 @@ export enum EffectType {
     OthersAddStone = 'OthersAddStone',
     OthersAddIron = 'OthersAddIron',
     PendingRemove = 'PendingRemove', // +
-    ChangeBuildingList = 'ChangeBuildingList', // 角色::德克萨斯 +
+    ChangeBuildingList = 'ChangeBuildingList', // 角色::德克萨斯
     CollectCharacter = 'CollectCharacter', // 角色::锡人 +
     RemoveAndScore = 'RemoveAndScore', // 角色::山 +
-    SelectBuildingColor = 'SelectBuildingColor', // 角色::玛恩纳 +
-    ReturnBuilding = 'ReturnBuilding', // 角色::玛恩纳 +
-    ForceSellAllIron = 'ForceSellAllIron', // 角色::银灰 +
-    ForceSellAllStone = 'ForceSellAllStone', // 角色::银灰 +
-    ForceSellAllScrap = 'ForceSellAllScrap', // 角色::银灰 +
-    RemoveForAll = 'RemoveForAll', // 角色::银灰 +
+    SelectBuildingColor = 'SelectBuildingColor', // 角色::玛恩纳
+    ReturnBuilding = 'ReturnBuilding', // 角色::玛恩纳
+    ForceSellAllIron = 'ForceSellAllIron', // 角色::银灰
+    ForceSellAllStone = 'ForceSellAllStone', // 角色::银灰
+    ForceSellAllScrap = 'ForceSellAllScrap', // 角色::银灰
+    RemoveForAll = 'RemoveForAll', // 角色::银灰
     SuperDeploy = 'SuperDeploy', // 城市::军工化区域
     ExtraMainAction = 'ExtraMainAction', // 城市::源石工业中枢
     RemoveCharacterCard = 'RemoveCharacterCard', // 禁止使用角色牌
@@ -133,5 +133,8 @@ export interface GameState<Map extends MapShape> {
         nodes: Record<Map['nodes'][number], NodeInfo>
     };
     players: Record<string, PlayerInfo>;
+    callbackArguments: any[];
+    callback?: string;
+    expectedCallbackArguments?: number;
     texts: string[];
 }

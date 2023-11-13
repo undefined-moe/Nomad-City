@@ -95,8 +95,8 @@ export const characters: Record<Characters, CharacterCard> = {
             [[1, EffectType.ForceSellAllScrap]],
         ],
         计谋: [[
-            [1, EffectType.RemoveForAll],
             [2, EffectType.Deploy],
+            [1, EffectType.RemoveForAll],
         ]],
     },
 };

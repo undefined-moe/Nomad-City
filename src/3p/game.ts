@@ -131,6 +131,41 @@ function getReachableRooms(source: RoomNames3, nodes: string[]) {
     return reachable;
 }
 
+const Callback: Record<string, (G: GameState<GameInfo3>, playerID: string, ...args: any[]) => void> = {
+    forceSellAll(G, _, type: ResourceType, playerID: string) {
+        G.players[playerID].resources[ResourceType.Cash] += G.players[playerID].resources[type] * 4;
+        G.players[playerID].resources[type] = 0;
+    },
+    附属能源设施(G, playerID, x, y) {
+        const building = G.players[playerID].buildings[x][y]!;
+        if (!building.onBuild.length) return;
+        delete G.pendingBuilding;
+        G.pendingEffectChoice = building.onBuild;
+        G.stageQueue.unshift('selectEffect');
+    },
+    玛恩纳(G, playerID, color) {
+        const playerGain = Object.fromEntries(Object.keys(G.players).map((p) => [p, 0]));
+        for (const [i, p] of Object.entries(G.players)) {
+            for (const b of p.buildings.flat()) {
+                if (b?.color === color || b?.color === 'any') playerGain[i] += 3;
+            }
+        }
+        const min = Math.min(...Object.values(playerGain));
+        if (playerGain[playerID] === min) playerGain[playerID] += 10;
+        for (const key in playerGain) {
+            G.players[key].resources[ResourceType.Cash] += playerGain[key];
+        }
+    },
+    玛恩纳_计谋(G, playerID, x, y) {
+        const building = G.players[playerID].buildings[x][y]!;
+        G.players[playerID].buildings[x][y] = undefined;
+        const cost = building.cost[building.payment!];
+        for (const [amount, type] of cost) {
+            G.players[playerID].resources[type] += amount;
+        }
+    },
+};
+
 function processEffect(G: GameState<GameInfo3>, playerID: string, effect: Effects) {
     const buildingMap = G.players[playerID].buildings;
     const player = G.players[playerID];
@@ -194,6 +229,8 @@ function processEffect(G: GameState<GameInfo3>, playerID: string, effect: Effect
             }
         } else if (type === EffectType.Trigger) {
             G.stageQueue.unshift('selectBuilding');
+            G.callback = '附属能源设施';
+            G.expectedCallbackArguments = 2;
         } else if (type === EffectType.PendingRemove) {
             player.endStageQueue.push('Remove');
         } else if (type === EffectType.SetEnd) {
@@ -210,6 +247,27 @@ function processEffect(G: GameState<GameInfo3>, playerID: string, effect: Effect
             if (!player.activeCharacter || G.effectUsed) return rollback();
             player.usedCards.push(player.activeCharacter!);
             player.activeCharacter = undefined;
+        } else if (type === EffectType.ChangeBuildingList) {
+            G.stageQueue.unshift('selectBuildingToRemove');
+        } else if ([EffectType.ForceSellAllIron, EffectType.ForceSellAllScrap, EffectType.ForceSellAllStone].includes(type)) {
+            G.stageQueue.unshift('selectPlayer');
+            G.callback = 'forceSellAll';
+            G.callbackArguments = [{
+                [EffectType.ForceSellAllIron]: ResourceType.Iron,
+                [EffectType.ForceSellAllScrap]: ResourceType.Scrap,
+                [EffectType.ForceSellAllStone]: ResourceType.Stone,
+            }[type as any]];
+            G.expectedCallbackArguments = 2;
+        } else if (type === EffectType.RemoveForAll) {
+            G.stageQueue.unshift('removeForAll');
+        } else if (type === EffectType.SelectBuildingColor) {
+            G.stageQueue.unshift('selectBuildingColor');
+            G.callback = '玛恩纳';
+            G.expectedCallbackArguments = 1;
+        } else if (type === EffectType.ReturnBuilding) {
+            G.stageQueue.unshift('selectBuilding');
+            G.callback = '玛恩纳_计谋';
+            G.expectedCallbackArguments = 2;
         } else {
             console.log('unknown effect type:', type);
         }
@@ -379,6 +437,12 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                     next: ({ G, ctx }) => (G.count ? ((ctx.playOrderPos + 1) % ctx.numPlayers) : undefined),
                 },
                 onMove: ({ G, events, playerID }) => {
+                    if (G.callback && G.callbackArguments.length === G.expectedCallbackArguments) {
+                        Callback[G.callback](G, playerID, ...G.callbackArguments);
+                        G.callback = undefined;
+                        G.callbackArguments = [];
+                        G.expectedCallbackArguments = 0;
+                    }
                     if (G.currentStage === 'quickAction') return;
                     if (G.currentStage === 'godMode') return;
                     const next = G.stageQueue.shift();
@@ -524,11 +588,37 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                         moves: {
                             Remove({ G, playerID }, target: string) {
                                 const [item, idx] = getWorkerNode(G, target);
-                                if (!item) return INVALID_MOVE;
-                                if (!item.workers[idx] || item.workers[idx] === playerID) return INVALID_MOVE;
+                                if (!item?.workers[idx] || item.workers[idx] === playerID) return INVALID_MOVE;
                                 item.workers[idx] = undefined;
                             },
                             Cancel() { },
+                        },
+                    },
+                    removeForAll: {
+                        moves: {
+                            SelectMultipleWorks({ G, playerID, ctx }, targets: string) {
+                                const players = new Set();
+                                const tgs = targets.split(',');
+                                if (tgs.length !== ctx.numPlayers) return INVALID_MOVE;
+                                for (const key of tgs) {
+                                    const [item, idx] = getWorkerNode(G, key);
+                                    if (!item?.workers[idx] || item.workers[idx] === playerID) return INVALID_MOVE;
+                                    players.add(item.workers[idx]);
+                                }
+                                if (players.size !== ctx.numPlayers) return INVALID_MOVE;
+                                for (const key of tgs) {
+                                    const [item, idx] = getWorkerNode(G, key);
+                                    item.workers[idx] = undefined;
+                                }
+                            },
+                        },
+                    },
+                    selectBuildingColor: {
+                        moves: {
+                            SelectBuildingColor({ G }, color: string) {
+                                if (!['red', 'yellow', 'blue'].includes(color)) return INVALID_MOVE;
+                                G.callbackArguments.push(color);
+                            },
                         },
                     },
                     Replace: {
@@ -621,6 +711,7 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 for (const [amount, type] of paymentRequireMents) {
                                     G.players[playerID].resources[type] -= amount;
                                 }
+                                card.payment = payment;
                                 G.pendingBuilding = card;
                                 G.shownBuildings[target] = G.cards.building.pop();
                                 G.stageQueue.unshift('placeBuilding');
@@ -656,6 +747,14 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                             },
                         },
                     },
+                    selectPlayer: {
+                        moves: {
+                            SelectPlayer({ G }, index: number) {
+                                if (!G.players[index]) return INVALID_MOVE;
+                                G.callbackArguments.push(index);
+                            },
+                        },
+                    },
                     cardChoice: {
                         moves: {
                             SelectChoice({ G, playerID }, choice: number) {
@@ -682,16 +781,23 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                             },
                         },
                     },
-                    selectBuilding: { // 由附属能源设施触发
+                    selectBuilding: {
                         moves: {
                             SelectBuilding({ G, playerID }, x: number, y: number) {
                                 if (x < 0 || x > 3 || y < 0 || y > 2) return INVALID_MOVE;
                                 const building = G.players[playerID].buildings[x][y];
                                 if (!building) return INVALID_MOVE;
-                                if (!building.onBuild.length) return;
-                                delete G.pendingBuilding;
-                                G.pendingEffectChoice = building.onBuild;
-                                G.stageQueue.unshift('selectEffect');
+                                G.callbackArguments.push(x, y);
+                            },
+                        },
+                    },
+                    selectBuildingToRemove: {
+                        moves: {
+                            SelectBuildingToRemove({ G }, index: number) {
+                                const card = G.shownBuildings[index];
+                                if (!card) return INVALID_MOVE;
+                                G.cards.building.unshift(card);
+                                G.shownBuildings[index] = G.cards.building.pop();
                             },
                         },
                     },

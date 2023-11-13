@@ -13,6 +13,7 @@ export interface BuildingCard {
     unique?: true;
     color: 'any' | 'red' | 'black' | 'yellow' | 'blue';
     rotate?: true;
+    payment?: number;
 }
 
 export enum Buildings {

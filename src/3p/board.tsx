@@ -160,6 +160,9 @@ export function Board(props: GameProps) {
                             收集资源：请选择希望经过的路径点，将自动收集资源
                             <button onClick={() => props.moves.Harvest(workerNodesSelected.join(','))}>确认选择</button>
                         </>}
+                        {props.isActive && stage === 'removeForAll' && <button
+                            onClick={() => props.moves.SelectMultipleWorks(workerNodesSelected.join(','))}
+                        >完成选择</button>}
                     </div>
                 </div>
                 <div id="buildingPanel" style={{
@@ -190,7 +193,10 @@ export function Board(props: GameProps) {
                     onMouseOut={() => setBuildingPanelHover(false)}
                 >
                     {props.G.shownBuildings.map((i, index) => i && <Building
-                        onClick={() => setBuildingSelected(buildingSelected === index ? null : index)}
+                        onClick={() => {
+                            if (stage === 'selectBuildingToRemove') props.moves.SelectBuildingToRemove(index);
+                            else setBuildingSelected(buildingSelected === index ? null : index);
+                        }}
                         offset={i.imageOffset}
                         height={200}
                     />)}
