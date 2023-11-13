@@ -246,5 +246,104 @@ export const EventCards: Record<EventType, Card[]> = {
             ],
         }],
     }],
-    [EventType.Red]: [],
+    [EventType.Red]: [{
+        name: '风蚀高地',
+        type: ResourceType.Stone,
+        double: true,
+        choices: [{
+            name: '凿断一根岩柱',
+            effect: [
+                [5, ResourceType.Stone],
+                [2, ResourceType.Scrap],
+            ],
+        }, {
+            name: '收集一些矿藏沉积物',
+            effect: [
+                [4, ResourceType.Iron],
+                [1, ResourceType.Scrap],
+            ],
+        }],
+    }, {
+        name: '源石尘沉降地',
+        type: ResourceType.Crystal,
+        choices: [{
+            name: '采集一些样品',
+            effect: [
+                [5, ResourceType.Scrap],
+                [1, ResourceType.Iron],
+                [1, ResourceType.Stone],
+            ],
+        }, {
+            name: '去大拓荒日报投稿',
+            effect: [
+                [3, ResourceType.Scrap],
+                [10, ResourceType.Cash],
+            ],
+        }],
+    }, {
+        name: '采集平台残骸',
+        type: ResourceType.Iron,
+        choices: [{
+            name: '他们没救了，继续回收作业',
+            effect: [
+                [4, ResourceType.Iron],
+                [5, ResourceType.Cash],
+            ],
+        }, {
+            name: '用设备刨开掩埋残骸的障碍，也许有更多的幸存者',
+            effect: [
+                [4, ResourceType.Stone],
+                [3, ResourceType.Scrap],
+            ],
+        }],
+    }, {
+        name: '绿地沙洲',
+        type: ResourceType.Stone,
+        double: true,
+        choices: [{
+            name: '就地搜寻可用的物资',
+            effect: [
+                [3, ResourceType.Iron],
+                [3, ResourceType.Stone],
+            ],
+        }, {
+            name: '去湖泊“寻宝”',
+            effect: [
+                [3, ResourceType.Scrap],
+                [11, ResourceType.Cash],
+            ],
+        }],
+    }, {
+        name: '自动化锻造厂',
+        type: ResourceType.Crystal,
+        choices: [{
+            name: '就在门口搜搜看',
+            effect: [
+                [4, ResourceType.Stone],
+                [3, ResourceType.Scrap],
+            ],
+        }, {
+            name: '在锻造厂里搜刮',
+            effect: [
+                [4, ResourceType.Iron],
+                [3, ResourceType.Cash],
+            ],
+        }],
+    }, {
+        name: '荒地主矿脉',
+        type: ResourceType.Crystal,
+        choices: [{
+            name: '先搬走最大的那块',
+            effect: [
+                [1, ResourceType.Crystal],
+                [5, ResourceType.Cash],
+            ],
+        }, {
+            name: '等工程设备到了再做打算',
+            effect: [
+                [3, ResourceType.Scrap],
+                [2, EffectType.Move],
+            ],
+        }],
+    }],
 };

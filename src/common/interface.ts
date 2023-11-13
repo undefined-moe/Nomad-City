@@ -72,6 +72,7 @@ export interface CardChoice {
 
 export interface Card {
     name: string;
+    double?: boolean;
     type: ResourceType;
     selected?: number;
     choices: CardChoice[];

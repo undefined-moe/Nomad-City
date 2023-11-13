@@ -149,7 +149,7 @@ export function Map(props: BoardProps<GameState<GameInfo3>> & { setWorkerNodes: 
     for (const [id, t] of Object.entries(props.G.map.rooms) as [RoomNames3, RoomInfo][]) {
         if (t.relatedCard) {
             decorations.push({
-                image: ResourceImage[t.relatedCard.type],
+                image: t.relatedCard.double ? ResourceImage['DoubleStone'] : ResourceImage[t.relatedCard.type],
                 position: interactiveElements[id].bound[0],
                 size: [200, 200],
             });

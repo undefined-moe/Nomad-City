@@ -743,8 +743,9 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 for (const node of reachable) {
                                     const room = G.map.rooms[node];
                                     if (!room.relatedCard?.type) continue;
-                                    if (room.workers[0] === playerID) G.players[playerID].resources[room.relatedCard.type] += 1;
-                                    if (room.workers[1] === playerID) G.players[playerID].resources[room.relatedCard.type] += 1;
+                                    if (room.workers[0] === playerID) {
+                                        G.players[playerID].resources[room.relatedCard.type] += room.relatedCard.double ? 2 : 1;
+                                    }
                                 }
                                 G.players[playerID].harvest = true;
                                 if (Object.values(G.players).every((p) => p.harvest)) {
