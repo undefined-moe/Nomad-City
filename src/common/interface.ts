@@ -46,7 +46,7 @@ export enum EffectType {
     Trigger = 'Trigger',
     Sell = 'Sell', // +
     Claim = 'Claim',
-    SetEnd = 'SetEnd', // +
+    SetEnd = 'SetEnd',
     Score = 'Score',
     OthersAddStone = 'OthersAddStone',
     OthersAddIron = 'OthersAddIron',
@@ -60,9 +60,9 @@ export enum EffectType {
     ForceSellAllStone = 'ForceSellAllStone', // 角色::银灰 +
     ForceSellAllScrap = 'ForceSellAllScrap', // 角色::银灰 +
     RemoveForAll = 'RemoveForAll', // 角色::银灰 +
-    SuperDeploy = 'SuperDeploy', // 城市::军工化区域 +
-    ExtraMainAction = 'ExtraMainAction', // 城市::源石工业中枢 +
-    RemoveCharacterCard = 'RemoveCharacterCard', // 禁止使用角色牌 +
+    SuperDeploy = 'SuperDeploy', // 城市::军工化区域
+    ExtraMainAction = 'ExtraMainAction', // 城市::源石工业中枢
+    RemoveCharacterCard = 'RemoveCharacterCard', // 禁止使用角色牌
 }
 
 export interface CardChoice {
@@ -90,6 +90,11 @@ export interface PlayerInfo {
     activeCharacter?: CharacterCard;
     harvest?: boolean;
     endStageQueue: string[];
+    declaredCityStyle: Record<string, {
+        total: number;
+        used: number;
+        reset: number;
+    }>;
 }
 
 export interface RoomInfo {
@@ -118,6 +123,7 @@ export interface GameState<Map extends MapShape> {
     advancedCityMove?: boolean;
     cards: Record<EventType, Card[]> & { building: BuildingCard[] };
     pendingCard?: Card;
+    pendingEffectChoice?: any;
     effectUsed?: number;
     pendingBuilding?: BuildingCard;
     shownBuildings: (BuildingCard | undefined)[];
