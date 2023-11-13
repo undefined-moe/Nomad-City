@@ -10,12 +10,21 @@ import { PlayerInfo } from './interface';
 import { useResizeObserver } from './resizeObserver';
 
 export default function PlayerStatus({
-    status, playerID, pendingBuilding, moves, stage,
+    status, playerID, pendingBuilding, moves, stage, onBuildingSelect,
 }: {
-    status: PlayerInfo, stage?: string, playerID: PlayerID, pendingBuilding?: BuildingCard, moves: any,
+    status: PlayerInfo, stage?: string,
+    playerID: PlayerID, pendingBuilding?: BuildingCard, moves: any,
+    onBuildingSelect?: (b: string) => void,
 }) {
     const ref = React.useRef<HTMLImageElement>();
     useResizeObserver();
+    const [buildingSelected, setBuildingSelected] = React.useState<string[]>([]);
+    React.useEffect(() => {
+        setBuildingSelected([]);
+    }, [onBuildingSelect]);
+    React.useEffect(() => {
+        if (buildingSelected) onBuildingSelect?.(buildingSelected.join(','));
+    }, [buildingSelected, onBuildingSelect]);
 
     return <div style={playerID === status.id ? { border: '3px solid', borderColor: 'green' } : {}}>
         <div style={{ position: 'relative' }}>
@@ -65,7 +74,18 @@ export default function PlayerStatus({
                             offset={b.imageOffset}
                             height={ref.current!.clientHeight / 4}
                             rotate={b.rotate}
-                            onClick={() => stage === 'selectBuilding' && moves.SelectBuilding(lineIndex, col)}
+                            onClick={() => {
+                                if (onBuildingSelect) {
+                                    const id = `BD${lineIndex}${col}`;
+                                    if (buildingSelected.includes(id)) {
+                                        setBuildingSelected(buildingSelected.filter((i) => i !== id));
+                                    } else {
+                                        setBuildingSelected([...buildingSelected, id]);
+                                    }
+                                }
+                                if (stage === 'selectBuilding') moves.SelectBuilding(lineIndex, col);
+                            }}
+                            selected={buildingSelected.includes(`BD${lineIndex}${col}`)}
                         />
                         : pendingBuilding
                             ? <Building

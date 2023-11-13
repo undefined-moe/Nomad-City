@@ -3,7 +3,8 @@ import 'allotment/dist/style.css';
 import { Allotment } from 'allotment';
 import type { BoardProps } from 'boardgame.io/react';
 import React from 'react';
-import { Building, Character } from '../common/card.tsx';
+import { Building, Character, CityStyle } from '../common/card.tsx';
+import { advancedCityStyles, basicCityStyles } from '../common/cityStyle.ts';
 import { renderEffects } from '../common/effect.tsx';
 import { GameState } from '../common/interface.ts';
 import PlayerStatus from '../common/PlayerStatus.tsx';
@@ -27,7 +28,6 @@ const hoverBoxStyle: React.CSSProperties = {
 };
 
 export function Board(props: GameProps) {
-    console.log(props.G);
     console.log(props);
     const currentPlayerStatus = props.G.players[props.playerID!];
     const stage = props.G.currentStage;
@@ -38,10 +38,15 @@ export function Board(props: GameProps) {
     const [charactersOpen, setCharactersOpen] = React.useState(false);
     const [charactersHover, setCharactersHover] = React.useState(false);
     const [charactersPanelHover, setCharactersPanelHover] = React.useState(false);
+    const [styleOpen, setStyleOpen] = React.useState(false);
+    const [styleHover, setStyleHover] = React.useState(false);
+    const [stylePanelHover, setStylePanelHover] = React.useState(false);
     const [buildingSelected, setBuildingSelected] = React.useState<number | null>(null);
     const [workerNodesSelected, setWorkerNodesSelected] = React.useState<string[]>([]);
     const selectBuildingPosition = props.isActive && stage === 'placeBuilding';
     const selectBuildingEffect = props.isActive && stage === 'selectBuildingEffect';
+    const [cityStyleSelected, setCityStyleSelected] = React.useState<any | null>(null);
+    const [buildingListSelected, setBuildingListSelected] = React.useState<string>('');
 
     return <div style={{
         width: '100vw',
@@ -61,16 +66,21 @@ export function Board(props: GameProps) {
                     <div>
                         {props.isActive && <button onClick={() => props.undo()}>撤销</button>}
                         <button
-                            onClick={() => setBuildingOpen(!buildingOpen)}
+                            onClick={() => { setBuildingOpen(!buildingOpen); setBuildingHover(false); }}
                             onMouseOver={() => setBuildingHover(true)}
                             onMouseLeave={() => setTimeout(() => setBuildingHover(false), 300)}
                         >建筑</button>
                         &nbsp;
                         <button
-                            onClick={() => setCharactersOpen(!charactersOpen)}
+                            onClick={() => { setCharactersOpen(!charactersOpen); setCharactersHover(false); }}
                             onMouseOver={() => setCharactersHover(true)}
                             onMouseLeave={() => setTimeout(() => setCharactersHover(false), 300)}
                         >角色</button>
+                        <button
+                            onClick={() => { setStyleOpen(!styleOpen); setStyleHover(false); }}
+                            onMouseOver={() => setStyleHover(true)}
+                            onMouseLeave={() => setTimeout(() => setStyleHover(false), 300)}
+                        >城市样式</button>
                         {props.isActive && stage === 'quickAction' && <button
                             onClick={() => props.moves.Abort()}
                         >跳过快速行动</button>}
@@ -81,6 +91,15 @@ export function Board(props: GameProps) {
                             {props.ctx.phase === 'pickCharacter' && '请选择一个角色盖放'}
                             {props.ctx.phase === 'action' && (stageHint[stage as any] || stage)}
                         </p>}
+                        {props.isActive && stage === 'quickAction' && <>
+                            <br />
+                            快速行动：{cityStyleSelected
+                                ? <>宣告：{cityStyleSelected.name} 点击建筑面板选择用于宣告的建筑<button
+                                    onClick={() => props.moves.CityStyle(cityStyleSelected.name, buildingListSelected)}
+                                >选择完成</button>
+                                <button onClick={() => setCityStyleSelected(null)}>取消</button></>
+                                : '点击角色发动效果或选择城市样式进行宣告'}
+                        </>}
                         {props.isActive && stage === 'mainAction' && <>
                             <br />
                             选择一项操作：
@@ -146,6 +165,26 @@ export function Board(props: GameProps) {
                         }}
                     />)}
                 </div>
+                <div
+                    style={{
+                        ...hoverBoxStyle,
+                        display: (styleHover || styleOpen || stylePanelHover) ? 'inherit' : 'none',
+                    }}
+                    onMouseOver={() => setStylePanelHover(true)}
+                    onMouseOut={() => setStylePanelHover(false)}
+                >
+                    {Object.values(basicCityStyles).map((i) => <CityStyle
+                        offset={i.offset}
+                        height={100}
+                        onClick={() => setCityStyleSelected(cityStyleSelected?.name === i.name ? null : i)}
+                    />)}
+                    {Object.values(advancedCityStyles).map((i) => <CityStyle
+                        offset={i.offset}
+                        height={100}
+                        onClick={() => setCityStyleSelected(cityStyleSelected?.name === i.name ? null : i)}
+                        advanced
+                    />)}
+                </div>
                 <div id="misc">
                     {props.G.pendingCard && (
                         <div>
@@ -176,6 +215,7 @@ export function Board(props: GameProps) {
                         status={player}
                         key={player.id}
                         stage={stage}
+                        {...(props.playerID === player.id && cityStyleSelected ? { onBuildingSelect: setBuildingListSelected } : {})}
                         {...(props.playerID === player.id && selectBuildingPosition ? { pendingBuilding: props.G.pendingBuilding } : {})}
                     />)}
                 </div>

@@ -5,6 +5,7 @@ import {
     buildingDeck, buildings,
 } from '../common/building';
 import { characters } from '../common/characters';
+import { basicCityStyles, styleMatch } from '../common/cityStyle';
 import { EventCards } from '../common/eventCards';
 import {
     Effects, EffectType, EventType, GameState, PlayerInfo, ResourceType,
@@ -396,7 +397,32 @@ const TheFounders3: Game<GameState<GameInfo3>> = {
                                 G.effectUsed = type;
                                 G.currentStage = '';
                             },
-                            CityStyle() { },
+                            CityStyle({ G, playerID }, style: string, buildingList: string) {
+                                const playerBuildings = G.players[playerID].buildings;
+                                const styleArray: any[][] = [
+                                    [undefined, undefined, undefined],
+                                    [undefined, undefined, undefined],
+                                    [undefined, undefined, undefined],
+                                    [undefined, undefined, undefined],
+                                ];
+                                for (let x = 0; x < 4; x++) {
+                                    for (let y = 0; y < 3; y++) {
+                                        if (!buildingList.includes(`BD${x}${y}`)) continue;
+                                        const b = playerBuildings[x][y];
+                                        if (!b || b.rotate) return INVALID_MOVE;
+                                        styleArray[x][y] = b?.color;
+                                    }
+                                }
+                                if (!styleMatch(basicCityStyles[style].condition, styleArray)) return INVALID_MOVE;
+                                for (let x = 0; x < 4; x++) {
+                                    for (let y = 0; y < 3; y++) {
+                                        if (buildingList.includes(`BD${x}${y}`)) {
+                                            playerBuildings[x][y]!.rotate = true;
+                                        }
+                                    }
+                                }
+                                
+                            },
                             Abort({ G }) {
                                 G.currentStage = '';
                             },

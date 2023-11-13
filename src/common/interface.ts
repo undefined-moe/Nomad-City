@@ -60,6 +60,9 @@ export enum EffectType {
     ForceSellAllStone = 'ForceSellAllStone', // 角色::银灰 +
     ForceSellAllScrap = 'ForceSellAllScrap', // 角色::银灰 +
     RemoveForAll = 'RemoveForAll', // 角色::银灰 +
+    SuperDeploy = 'SuperDeploy', // 城市::军工化区域 +
+    ExtraMainAction = 'ExtraMainAction', // 城市::源石工业中枢 +
+    RemoveCharacterCard = 'RemoveCharacterCard', // 禁止使用角色牌 +
 }
 
 export interface CardChoice {
